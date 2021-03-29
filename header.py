@@ -40,7 +40,8 @@ class CharSequence:
 
 
 class Token:
-    def __init__(self, type=TokenType.UNKNOWN, text=''):
+    def __init__(self, row_number=1, type=TokenType.UNKNOWN, text=''):
+        self.row_number = row_number
         self.type = type
         self.text = text
 
