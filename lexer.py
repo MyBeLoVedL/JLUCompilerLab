@@ -7,14 +7,31 @@ from header import Token
 t_stream = header.TokenStream()
 row = 1
 
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+def show_error(msg='error occurs !~'):
+    print(msg)
+    exit()
+
+
 def is_space(ch):
     global row
-    if ch == ' ' or ch == '\t' :
+    if ch == ' ' or ch == '\t':
         return True
     elif ch == '\r' or ch == '\n':
         row += 1
         return True
-
 
 
 def trim_space(target: header.CharSequence):
@@ -26,8 +43,19 @@ def create_new_row(row):
     row += 1
 
 
+def parse_comment(context: header.CharSequence):
+    context.pos += 1
+    cur = context.pos
+    str_len = len(context.stream)
+    while cur < str_len and context.stream[cur] != '}':
+        cur += 1
+    if cur == len(context.stream):
+        show_error('comment bracket not match !~')
+    context.pos = cur + 1
+
+
 def parse_ID_or_keyword(context: header.CharSequence):
-    global t_stream
+    global t_strea
     global row
     tok = header.Token()
     init_pos = context.pos
@@ -77,6 +105,8 @@ def scan(context: header.CharSequence):
             tok.type = single_char_token[cur_char]
             context.pos += 1
             t_stream.tokenStream.append(tok)
+        elif cur_char == '{':
+            parse_comment(context)
         elif context.stream[context.pos:context.pos + 2] == ':=':
             tok = Token()
             tok.row_number = row
@@ -96,5 +126,5 @@ if __name__ == '__main__':
     print(context.stream)
     scan(context)
     for tok in t_stream.tokenStream:
-        print(f'row_number: {tok.row_number} type : {tok.type} text: {tok.text}')
-    print(context.pos)
+        print(
+            'rows:'+bcolors.WARNING + f'{tok.row_number}'+bcolors.WARNING + '   type :'+bcolors.FAIL + f'{  tok.type}' + bcolors.FAIL + '    ' + bcolors.OKGREEN + f'{tok.text}' + bcolors.OKGREEN)

@@ -1,4 +1,7 @@
 program p
+    {
+        I am the comment!
+    }
     type t = integer;
     var t v1;
     char v2;
