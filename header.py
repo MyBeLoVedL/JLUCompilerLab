@@ -7,6 +7,18 @@ keywords = set(["program", "var", "integer", "char", "procedure", "begin", "end"
                 "intc", "if", "then", "else", "fi", "while", "do", "endwh", "return", "array", "read", "write", "type"])
 
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
 class TokenType(enum.Enum):
     ID = 0
     NUM = 1
@@ -49,3 +61,41 @@ class Token:
 class TokenStream:
     def __init__(self):
         self.tokenStream = []
+        self.pos = 0
+
+    def peek(self):
+        return self.tokenStream[pos]
+
+    def read(self):
+        res = self.tokenStream[pos]
+        self.pos += 1
+        return res
+
+    def unread(self, num=1):
+        self.pos -= num
+
+    def reset_pos(self, pos):
+        self.pos = pos
+
+
+class ASTnode:
+    def __init__(self, type, text):
+        self.type = type
+        self.text = text
+        self.child = []
+
+    def addChild(self, child):
+        self.child.append(child)
+
+
+def show_error(text, line_num, msg):
+    lines = text.split('\n')
+    i = 0
+    for i in range(line_num - 1):
+        print(' '*10 + lines[i])
+    i += 1
+    print(bcolors().FAIL+'>>>>>'.ljust(9, ' ')+bcolors.ENDC, end=' ')
+    print(lines[i])
+    print()
+    print()
+    print(bcolors.OKGREEN + msg + bcolors.ENDC)
