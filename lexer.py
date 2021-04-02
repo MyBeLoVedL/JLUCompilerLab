@@ -10,11 +10,6 @@ t_stream = header.TokenStream()
 row = 1
 
 
-def show_error(msg='error occurs !~'):
-    print(msg)
-    exit()
-
-
 def is_space(ch):
     global row
     if ch == ' ' or ch == '\t':
@@ -63,7 +58,7 @@ def parse_ID_or_keyword(context: header.CharSequence):
 def parse_number(context: header.CharSequence):
     global t_stream
     global row
-    tok = header.Token
+    tok = Token()
     init_pos = context.pos
     while context.stream[context.pos].isdigit():
         context.pos += 1
@@ -103,24 +98,3 @@ def scan(context: header.CharSequence):
             tok.type = TokenType.ASSIGN
             context.pos += 2
             t_stream.tokenStream.append(tok)
-
-
-if __name__ == '__main__':
-
-    with open('simple.snl', 'r') as f:
-        lines = f.readlines()
-
-    context = header.CharSequence(''.join(lines))
-
-    header.show_error(context.stream, 6, 'invalid Identifier~')
-
-    # scan(context)
-    # for tok in t_stream.tokenStream:
-    #     print(
-    #         'rows:'+bcolors.WARNING +
-    #         f'{tok.row_number}'.ljust(6, ' ') + bcolors.WARNING
-    #         + 'type: ' + bcolors.OKBLUE +
-    #         str(tok.type).ljust(26, ' ') + bcolors.OKBLUE
-    #         + 'text:  ' + bcolors.OKGREEN +
-    #         tok.text.ljust(10, ' ') + bcolors.ENDC
-    #     )

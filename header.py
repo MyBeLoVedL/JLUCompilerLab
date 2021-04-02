@@ -64,10 +64,10 @@ class TokenStream:
         self.pos = 0
 
     def peek(self):
-        return self.tokenStream[pos]
+        return self.tokenStream[self.pos]
 
     def read(self):
-        res = self.tokenStream[pos]
+        res = self.tokenStream[self.pos]
         self.pos += 1
         return res
 
@@ -79,13 +79,18 @@ class TokenStream:
 
 
 class ASTnode:
-    def __init__(self, type, text):
+    def __init__(self, type):
         self.type = type
-        self.text = text
         self.child = []
 
     def addChild(self, child):
         self.child.append(child)
+
+
+class ASTtype(enum.Enum):
+    MUL_EXP = 0
+    ADD_EXP = 1
+    PRI_EXP = 2
 
 
 def show_error(text, line_num, msg):
@@ -99,3 +104,32 @@ def show_error(text, line_num, msg):
     print()
     print()
     print(bcolors.OKGREEN + msg + bcolors.ENDC)
+    exit()
+
+
+def show_tokens(t_stream: TokenStream):
+    for tok in t_stream.tokenStream:
+        print(
+            'rows:'+bcolors.WARNING +
+            f'{tok.row_number}'.ljust(6, ' ') + bcolors.WARNING
+            + 'type: ' + bcolors.OKBLUE +
+            str(tok.type).ljust(26, ' ') + bcolors.OKBLUE
+            + 'text:  ' + bcolors.OKGREEN +
+            tok.text.ljust(10, ' ') + bcolors.ENDC
+        )
+
+
+def draw_ast_tree(root):
+    draw_ast_tree_helper(root, ' ')
+
+
+def draw_ast_tree_helper(root, sep):
+    if root is None:
+        return
+    if type(root) == ASTnode:
+        print(sep + str(root.type) + ':')
+        for c in root.child:
+            draw_ast_tree_helper(c, sep + ' '*4)
+    else:
+        print(sep + bcolors.WARNING + str(root.type).ljust(5) +
+              bcolors.OKGREEN + root.text.rjust(5))
