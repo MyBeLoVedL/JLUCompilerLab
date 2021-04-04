@@ -1,11 +1,26 @@
-
+import header
+import lexer
+from header import Token
+from header import TokenType
 """
 parse expressions
 """
+t_stream = header.TokenStream()
+parameter_list = []
 
 
+# 匹配失败 则回溯
 def match_mul():
-    return
+    global t_stream
+    prime = t_stream.Token()
+    if prime.type == TokenType.NUM:
+
+    elif prime.type == TokenType.ID:
+
+    elif prime.type == TokenType.LEFT_PAREN:
+
+    else:
+        lexer.show_error("error!")
 
 
 def match_add():

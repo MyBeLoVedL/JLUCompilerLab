@@ -55,7 +55,7 @@ def parse_comment(context: header.CharSequence):
 
 
 def parse_ID_or_keyword(context: header.CharSequence):
-    global t_strea
+    global t_stream
     global row
     tok = header.Token()
     init_pos = context.pos
