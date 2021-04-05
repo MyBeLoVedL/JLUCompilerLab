@@ -75,6 +75,36 @@ single_char_token = {'=': TokenType.EQUAL, ';': TokenType.COLON,
                      }
 
 
+def parse_rel_op(context: header.CharSequence):
+    cur_char = context.stream[context.pos]
+    tok = Token()
+    tok.row_number = row
+    if context.stream[context.pos:context.pos + 2] == '>=':
+        tok.type = TokenType.BIGGER_THAN_OR_EQUAL
+        context.pos += 2
+    elif context.stream[context.pos:context.pos + 2] == '<=':
+        tok.type = TokenType.LESS_THAN_OR_EQUAL
+        context.pos += 2
+    elif cur_char == '>':
+        tok.type = TokenType.BIGGER_THAN
+        context.pos += 1
+    elif cur_char == '<':
+        tok.type = TokenType.LESS_THAN
+        context.pos += 1
+    t_stream.tokenStream.append(tok)
+
+
+def parse_dual_op(context: header.CharSequence):
+    tok = Token()
+    tok.row_number = row
+    if context.stream[context.pos:context.pos + 2] == ':=':
+        tok.type = TokenType.ASSIGN
+    elif context.stream[context.pos:context.pos + 2] == '!=':
+        tok.type = TokenType.NOT_EQUAL
+    context.pos += 2
+    t_stream.tokenStream.append(tok)
+
+
 def scan(context: header.CharSequence):
     seq_len = len(context.stream)
     while context.pos < seq_len:
@@ -92,9 +122,7 @@ def scan(context: header.CharSequence):
             t_stream.tokenStream.append(tok)
         elif cur_char == '{':
             parse_comment(context)
-        elif context.stream[context.pos:context.pos + 2] == ':=':
-            tok = Token()
-            tok.row_number = row
-            tok.type = TokenType.ASSIGN
-            context.pos += 2
-            t_stream.tokenStream.append(tok)
+        elif cur_char in ('>', '<'):
+            parse_rel_op(context)
+        elif context.stream[context.pos:context.pos + 2] in (':=', '!='):
+            parse_dual_op(context)

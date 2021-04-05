@@ -42,7 +42,10 @@ class TokenType(enum.Enum):
     DOUBLE_QUOTE = 19
     KEY_WORD = 20
     UNKNOWN = 21,
-    SEMI_COLON = 22
+    SEMI_COLON = 22,
+    LESS_THAN_OR_EQUAL = 23,
+    BIGGER_THAN_OR_EQUAL = 24
+    NOT_EQUAL = 25
 
 
 class CharSequence:
@@ -79,8 +82,9 @@ class TokenStream:
 
 
 class ASTnode:
-    def __init__(self, type):
+    def __init__(self, type, text=''):
         self.type = type
+        self.text = text
         self.child = []
 
     def addChild(self, child):
@@ -91,6 +95,7 @@ class ASTtype(enum.Enum):
     MUL_EXP = 0
     ADD_EXP = 1
     PRI_EXP = 2
+    REL_EXP = 3
 
 
 def show_error(text, line_num, msg):
