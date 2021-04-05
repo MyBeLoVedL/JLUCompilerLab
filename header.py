@@ -6,6 +6,8 @@ import enum
 keywords = set(["program", "var", "integer", "char", "procedure", "begin", "end", "id", "array",
                 "intc", "if", "then", "else", "fi", "while", "do", "endwh", "return", "array", "read", "write", "type"])
 
+to_be_parsed_text = 'hem'
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -80,6 +82,9 @@ class TokenStream:
     def reset_pos(self, pos):
         self.pos = pos
 
+    def not_empty(self):
+        return self.pos < len(self.tokenStream)
+
 
 class ASTnode:
     def __init__(self, type, text=''):
@@ -96,11 +101,24 @@ class ASTtype(enum.Enum):
     ADD_EXP = 1
     PRI_EXP = 2
     REL_EXP = 3
+    SIMPLE_SMT = 4
+    RET_SMT = 5
+    ASSIGN_SMT = 6
+    COND_SMT = 7
+    LOOP_SMT = 8
+    INPUT_SMT = 9
+    OUTPUT_SMT = 10
 
 
-def show_error(text, line_num, msg):
-    lines = text.split('\n')
-    i = 0
+def set_text(text):
+    global to_be_parsed_text
+    to_be_parsed_text = text
+
+
+def show_error(line_num, msg):
+    global to_be_parsed_text
+    lines = to_be_parsed_text.split('\n')
+    i = -1
     for i in range(line_num - 1):
         print(' '*10 + lines[i])
     i += 1
@@ -113,7 +131,7 @@ def show_error(text, line_num, msg):
 
 
 def show_tokens(t_stream: TokenStream):
-    for tok in t_stream.tokenStream:
+    for tok in t_stream.tokenStream[t_stream.pos:]:
         print(
             'rows:'+bcolors.WARNING +
             f'{tok.row_number}'.ljust(6, ' ') + bcolors.WARNING
