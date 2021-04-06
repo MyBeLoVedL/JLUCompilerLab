@@ -73,7 +73,7 @@ def parse_number(context: header.CharSequence):
 single_char_token = {'=': TokenType.EQUAL, ';': TokenType.COLON,
                      '(': TokenType.LEFT_PAREN, ')': TokenType.RIGHT_PAREN,
                      '+': TokenType.PLUS, '-': TokenType.MINUS, '*': TokenType.STAR, '/': TokenType.DIV,
-                     '.': TokenType.DOT
+                     '.': TokenType.DOT, ',': TokenType.COMMA
                      }
 
 

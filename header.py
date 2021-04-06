@@ -4,7 +4,7 @@ import enum
 
 
 keywords = set(["program", "var", "integer", "char", "procedure", "begin", "end", "id", "array",
-                "intc", "if", "then", "else", "fi", "while", "do", "endwh", "return", "array", "read", "write", "type"])
+                "intc", "if", 'fi', "then", "else", "fi", "while", "do", "endwh", "return", "array", "read", "write", "type"])
 
 to_be_parsed_text = 'hem'
 
@@ -48,6 +48,7 @@ class TokenType(enum.Enum):
     LESS_THAN_OR_EQUAL = 23,
     BIGGER_THAN_OR_EQUAL = 24
     NOT_EQUAL = 25
+    COMMA = 26
 
 
 class CharSequence:
@@ -108,6 +109,7 @@ class ASTtype(enum.Enum):
     LOOP_SMT = 8
     INPUT_SMT = 9
     OUTPUT_SMT = 10
+    FUNC_CALL = 11
 
 
 def set_text(text):
@@ -151,6 +153,11 @@ def draw_ast_tree_helper(root, sep):
         return
     if type(root) == ASTnode:
         print(sep + str(root.type) + ':')
+        if root.type == ASTtype.FUNC_CALL:
+            print(sep + f'( function name: {root.FUNC_NAME.text}',
+                  end=bcolors.WARNING + ' args: ' + bcolors.ENDC)
+            for arg in root.ARG_LIST:
+                print(str(arg.type), end=' ')
         for c in root.child:
             draw_ast_tree_helper(c, sep + ' '*4)
     else:
