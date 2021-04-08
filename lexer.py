@@ -1,7 +1,7 @@
 #!/bin/python3
 
 import header
-from header import TokenType
+from header import TokenType, show_error
 from header import Token
 from header import bcolors
 import pprint
@@ -20,7 +20,8 @@ def is_space(ch):
 
 
 def trim_space(target: header.CharSequence):
-    while is_space(target.stream[target.pos]):
+    slen = len(target.stream)
+    while target.pos < slen and is_space(target.stream[target.pos]):
         target.pos += 1
 
 
@@ -35,7 +36,7 @@ def parse_comment(context: header.CharSequence):
     while cur < str_len and context.stream[cur] != '}':
         cur += 1
     if cur == len(context.stream):
-        show_error('comment bracket not match !~')
+        show_error(row, 'bracket not match ~')
     context.pos = cur + 1
 
 
@@ -60,7 +61,8 @@ def parse_number(context: header.CharSequence):
     global row
     tok = Token()
     init_pos = context.pos
-    while context.stream[context.pos].isdigit():
+    end_pos = len(context.stream)
+    while context.pos < end_pos and context.stream[context.pos].isdigit():
         context.pos += 1
     tok.row_number = row
     tok.text = context.stream[init_pos:context.pos]
@@ -71,12 +73,44 @@ def parse_number(context: header.CharSequence):
 single_char_token = {'=': TokenType.EQUAL, ';': TokenType.COLON,
                      '(': TokenType.LEFT_PAREN, ')': TokenType.RIGHT_PAREN,
                      '+': TokenType.PLUS, '-': TokenType.MINUS, '*': TokenType.STAR, '/': TokenType.DIV,
-                     '.': TokenType.DOT
+                     '.': TokenType.DOT, ',': TokenType.COMMA
                      }
 
 
+def parse_rel_op(context: header.CharSequence):
+    cur_char = context.stream[context.pos]
+    tok = Token()
+    tok.row_number = row
+    if context.stream[context.pos:context.pos + 2] == '>=':
+        tok.type = TokenType.BIGGER_THAN_OR_EQUAL
+        context.pos += 2
+    elif context.stream[context.pos:context.pos + 2] == '<=':
+        tok.type = TokenType.LESS_THAN_OR_EQUAL
+        context.pos += 2
+    elif cur_char == '>':
+        tok.type = TokenType.BIGGER_THAN
+        context.pos += 1
+    elif cur_char == '<':
+        tok.type = TokenType.LESS_THAN
+        context.pos += 1
+    t_stream.tokenStream.append(tok)
+
+
+def parse_dual_op(context: header.CharSequence):
+    tok = Token()
+    tok.row_number = row
+    if context.stream[context.pos:context.pos + 2] == ':=':
+        tok.type = TokenType.ASSIGN
+    elif context.stream[context.pos:context.pos + 2] == '!=':
+        tok.type = TokenType.NOT_EQUAL
+    context.pos += 2
+    t_stream.tokenStream.append(tok)
+
+
 def scan(context: header.CharSequence):
+    context.stream = context.stream.strip()
     seq_len = len(context.stream)
+
     while context.pos < seq_len:
         trim_space(context)
         cur_char = context.stream[context.pos]
@@ -92,9 +126,7 @@ def scan(context: header.CharSequence):
             t_stream.tokenStream.append(tok)
         elif cur_char == '{':
             parse_comment(context)
-        elif context.stream[context.pos:context.pos + 2] == ':=':
-            tok = Token()
-            tok.row_number = row
-            tok.type = TokenType.ASSIGN
-            context.pos += 2
-            t_stream.tokenStream.append(tok)
+        elif cur_char in ('>', '<'):
+            parse_rel_op(context)
+        elif context.stream[context.pos:context.pos + 2] in (':=', '!='):
+            parse_dual_op(context)

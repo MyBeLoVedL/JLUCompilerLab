@@ -4,7 +4,9 @@ import enum
 
 
 keywords = set(["program", "var", "integer", "char", "procedure", "begin", "end", "id", "array",
-                "intc", "if", "then", "else", "fi", "while", "do", "endwh", "return", "array", "read", "write", "type"])
+                "intc", "if", 'fi', "then", "else", "fi", "while", "do", "endwh", "return", "array", "read", "write", "type"])
+
+to_be_parsed_text = 'hem'
 
 
 class bcolors:
@@ -42,7 +44,11 @@ class TokenType(enum.Enum):
     DOUBLE_QUOTE = 19
     KEY_WORD = 20
     UNKNOWN = 21,
-    SEMI_COLON = 22
+    SEMI_COLON = 22,
+    LESS_THAN_OR_EQUAL = 23,
+    BIGGER_THAN_OR_EQUAL = 24
+    NOT_EQUAL = 25
+    COMMA = 26
 
 
 class CharSequence:
@@ -77,10 +83,14 @@ class TokenStream:
     def reset_pos(self, pos):
         self.pos = pos
 
+    def not_empty(self):
+        return self.pos < len(self.tokenStream)
+
 
 class ASTnode:
-    def __init__(self, type):
+    def __init__(self, type, text=''):
         self.type = type
+        self.text = text
         self.child = []
 
     def addChild(self, child):
@@ -91,11 +101,26 @@ class ASTtype(enum.Enum):
     MUL_EXP = 0
     ADD_EXP = 1
     PRI_EXP = 2
+    REL_EXP = 3
+    SIMPLE_SMT = 4
+    RET_SMT = 5
+    ASSIGN_SMT = 6
+    COND_SMT = 7
+    LOOP_SMT = 8
+    INPUT_SMT = 9
+    OUTPUT_SMT = 10
+    FUNC_CALL = 11
 
 
-def show_error(text, line_num, msg):
-    lines = text.split('\n')
-    i = 0
+def set_text(text):
+    global to_be_parsed_text
+    to_be_parsed_text = text
+
+
+def show_error(line_num, msg):
+    global to_be_parsed_text
+    lines = to_be_parsed_text.split('\n')
+    i = -1
     for i in range(line_num - 1):
         print(' '*10 + lines[i])
     i += 1
@@ -108,7 +133,7 @@ def show_error(text, line_num, msg):
 
 
 def show_tokens(t_stream: TokenStream):
-    for tok in t_stream.tokenStream:
+    for tok in t_stream.tokenStream[t_stream.pos:]:
         print(
             'rows:'+bcolors.WARNING +
             f'{tok.row_number}'.ljust(6, ' ') + bcolors.WARNING
@@ -128,6 +153,11 @@ def draw_ast_tree_helper(root, sep):
         return
     if type(root) == ASTnode:
         print(sep + str(root.type) + ':')
+        if root.type == ASTtype.FUNC_CALL:
+            print(sep + f'( function name: {root.FUNC_NAME.text}',
+                  end=bcolors.WARNING + ' args: ' + bcolors.ENDC)
+            for arg in root.ARG_LIST:
+                print(str(arg.type), end=' ')
         for c in root.child:
             draw_ast_tree_helper(c, sep + ' '*4)
     else:
