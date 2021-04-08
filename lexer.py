@@ -3,26 +3,11 @@
 import header
 from header import TokenType
 from header import Token
+from header import bcolors
+import pprint
 
 t_stream = header.TokenStream()
 row = 1
-
-
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
-
-def show_error(msg='error occurs !~'):
-    print(msg)
-    exit()
 
 
 def is_space(ch):
@@ -73,7 +58,7 @@ def parse_ID_or_keyword(context: header.CharSequence):
 def parse_number(context: header.CharSequence):
     global t_stream
     global row
-    tok = header.Token
+    tok = Token()
     init_pos = context.pos
     while context.stream[context.pos].isdigit():
         context.pos += 1
@@ -113,18 +98,3 @@ def scan(context: header.CharSequence):
             tok.type = TokenType.ASSIGN
             context.pos += 2
             t_stream.tokenStream.append(tok)
-
-
-if __name__ == '__main__':
-    # scan("int age = 10;")
-
-    with open('simple.snl', 'r') as f:
-        lines = f.readlines()
-        print(lines)
-
-    context = header.CharSequence(''.join(lines))
-    print(context.stream)
-    scan(context)
-    for tok in t_stream.tokenStream:
-        print(
-            'rows:'+bcolors.WARNING + f'{tok.row_number}'+bcolors.WARNING + '   type :'+bcolors.FAIL + f'{  tok.type}' + bcolors.FAIL + '    ' + bcolors.OKGREEN + f'{tok.text}' + bcolors.OKGREEN)
