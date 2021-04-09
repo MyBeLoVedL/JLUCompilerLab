@@ -110,6 +110,8 @@ class ASTtype(enum.Enum):
     INPUT_SMT = 9
     OUTPUT_SMT = 10
     FUNC_CALL = 11
+    ASG_SMT = 12
+    PROC_BLOCK = 13
 
 
 def set_text(text):
@@ -158,6 +160,15 @@ def draw_ast_tree_helper(root, sep):
                   end=bcolors.WARNING + ' args: ' + bcolors.ENDC)
             for arg in root.ARG_LIST:
                 print(str(arg.type), end=' ')
+        elif root.type == ASTtype.ASG_SMT:
+            # print(sep + str(root.type) + ':')
+            print(sep + '   ' + root.VARI.text, end='')
+            if root.STRUCT is not None:
+                print('.' + root.STRUCT.text, end='')
+            if root.ARR_INDEX is not None:
+                print(f'[{str(root.ARR_INDEX.type)}]', end='')
+            print(' := ' + str(root.EXP.type))
+
         for c in root.child:
             draw_ast_tree_helper(c, sep + ' '*4)
     else:

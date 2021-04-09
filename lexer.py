@@ -73,7 +73,8 @@ def parse_number(context: header.CharSequence):
 single_char_token = {'=': TokenType.EQUAL, ';': TokenType.COLON,
                      '(': TokenType.LEFT_PAREN, ')': TokenType.RIGHT_PAREN,
                      '+': TokenType.PLUS, '-': TokenType.MINUS, '*': TokenType.STAR, '/': TokenType.DIV,
-                     '.': TokenType.DOT, ',': TokenType.COMMA
+                     '.': TokenType.DOT, ',': TokenType.COMMA, '[': TokenType.LEFT_SQUARE_BRACKET,
+                     ']': TokenType.RIGHT_SQUARE_BRACKET
                      }
 
 
@@ -130,3 +131,5 @@ def scan(context: header.CharSequence):
             parse_rel_op(context)
         elif context.stream[context.pos:context.pos + 2] in (':=', '!='):
             parse_dual_op(context)
+        else:
+            show_error(t_stream.tokenStream[-1].row_number, 'unknown token~')

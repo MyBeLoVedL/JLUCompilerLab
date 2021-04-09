@@ -13,14 +13,25 @@ source_text = ''
 def expect(tokens, target_token_type, error_msg):
     if tokens.peek().type != target_token_type:
         show_error(tokens.peek().row_number, error_msg)
-    tokens.read()
+    return tokens.read()
+
+
+def parse_arg_list(tokens: TokenStream):
+    tmp = []
+    if tokens.peek().type != TokenType.RIGHT_PAREN:
+        first_arg = match_rel(tokens)
+        tmp.ARG_LIST.append(first_arg)
+    while tokens.peek().type != TokenType.RIGHT_PAREN:
+        expect(tokens, TokenType.COMMA,
+               'use comma to seperate multiple arguments ~')
+        arg = match_rel(tokens)
+        tmp.append(arg)
+    return tmp
 
 
 def match_pri(tokens: TokenStream):
-    tmp = ''
+    tmp = None
     init_pos = tokens.pos
-    if not tokens.not_empty():
-        return
     if tokens.peek().type == TokenType.ID:
         tmp = tokens.read()
         if tokens.peek().type == TokenType.LEFT_PAREN:
@@ -179,7 +190,8 @@ def parse_statement(tokens: TokenStream):
         return parse_IO_statement
     else:
         # ! if match failed,should not consume any token
-        smt = parse_assign_statement(tokens)
+        if tokens.peek().type == TokenType.ID:
+            smt = parse_assign_statement(tokens)
         if smt is None:
             smt = parse_simple_statement(tokens)
         return smt
@@ -200,9 +212,50 @@ def parse_simple_statement(tokens: TokenStream):
     tokens.read()
     return smt
 
+# ! VARI is the name of identifier,STRUCT if possible struct member,ARR_INDEX is possible array index
+
 
 def parse_assign_statement(tokens: TokenStream):
-    return None
+    init_pos = tokens.pos
+    asg_smt = ASTnode(ASTtype.ASG_SMT)
+
+    assert(tokens.peek().type == TokenType.ID)
+    asg_smt.VARI = tokens.read()
+
+    if tokens.peek().type == TokenType.DOT:
+        tokens.read()
+        expect(tokens, TokenType.ID, 'expect identifier at struct position')
+        tokens.unread()
+        asg_smt.STRUCT = tokens.read()
+
+    if tokens.peek().type == TokenType.LEFT_SQUARE_BRACKET:
+        tokens.read()
+        exp = match_rel(tokens)
+        if exp is None:
+            show_error(tokens.tokenStream[tokens.pos].row_number,
+                       'expect expression between square bracket')
+        if tokens.peek().type != TokenType.RIGHT_SQUARE_BRACKET:
+            show_error(
+                tokens.tokenStream[tokens.pos].row_number, 'mismatched square bracket~')
+        tokens.read()
+        asg_smt.ARR_INDEX = exp
+
+    if tokens.peek().type != TokenType.ASSIGN:
+        tokens.pos = init_pos
+        return None
+
+    expect(tokens, TokenType.ASSIGN, 'expect assign operator ~')
+
+    val = match_rel(tokens)
+
+    if val is None:
+        show_error(
+            tokens.tokenStream[tokens.pos].row_number, 'expect expression after assign')
+    asg_smt.EXP = val
+
+    expect(tokens, TokenType.COLON, 'expect colon ~')
+
+    return asg_smt
 
 
 def parse_return_statement(tokens: TokenStream):
@@ -280,6 +333,10 @@ def parse_loop_statement(tokens: TokenStream):
         if child_smt is None:
             break
         loop_smt.LOOP_SMT.append(child_smt)
+    if tokens.peek().type != TokenType.KEY_WORD or tokens.peek().text != 'endwh':
+        show_error(tokens.peek().row_number,
+                   'expect \'endwh\' at the end of if statement~')
+
     return loop_smt
 
 
@@ -332,6 +389,10 @@ parse declarations
 """
 
 
+def parse_declaration(tokens: TokenStream):
+    pass
+
+
 def parse_variable():
     return
 
@@ -340,7 +401,14 @@ def parse_type():
     return
 
 
-def parse_procedure():
+def parse_procedure(tokens: TokenStream):
+    assert tokens.peek().type == TokenType.KEY_WORD and tokens.peek().text == 'procedure'
+    tokens.read()
+
+    proc_blk = ASTnode(ASTtype.PROC_BLOCK)
+    proc_blk.PROC_NAME = expect(
+        tokens, TokenType.ID, 'expect procedure name ~')
+
     return
 
 
@@ -350,7 +418,10 @@ if __name__ == '__main__':
         lines = f.readlines()
     # source_text = ''.join(lines)
     # source_text = '(1 + 2 ) >= (4 + 2 * 2)  = true ;'
-    source_text = 'add(1 + 2,1*2 );\nif 1 > 2 then a = 10; else a = 20; fi'
+    # source_text = 'add(1 + 2,1*2 );\nif 1 > 2 then a = 10; else a = 20; fi'
+    # source_text = 'add(12 + 32*12 ,101);  '
+    # source_text = ' iden.age[add(1 * 23)] := 1 + 2 > 3 +2;'
+    source_text = 'add(1 * 23) ; '  # // bad text case
     set_text(source_text)
     parsed_text = source_text + '.'
     context = CharSequence(parsed_text)
@@ -359,6 +430,6 @@ if __name__ == '__main__':
     node = parse_statement(t_stream)
     draw_ast_tree(node)
     print()
-    print('~'*40)
-    node2 = parse_statement(t_stream)
-    draw_ast_tree(node2)
+    # print('~'*40)
+    # node2 = parse_statement(t_stream)
+    # draw_ast_tree(node2)

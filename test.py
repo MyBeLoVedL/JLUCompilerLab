@@ -5,3 +5,4 @@ if type(b) == header.TokenStream:
     print('I am str')
 else:
     print('I am not str')
+
