@@ -7,6 +7,8 @@ parse expressions
 from header import *
 from lexer import *
 
+from cyberbrain import trace
+
 source_text = ''
 
 
@@ -20,7 +22,7 @@ def parse_arg_list(tokens: TokenStream):
     tmp = []
     if tokens.peek().type != TokenType.RIGHT_PAREN:
         first_arg = match_rel(tokens)
-        tmp.ARG_LIST.append(first_arg)
+        tmp.append(first_arg)
     while tokens.peek().type != TokenType.RIGHT_PAREN:
         expect(tokens, TokenType.COMMA,
                'use comma to seperate multiple arguments ~')
@@ -29,40 +31,52 @@ def parse_arg_list(tokens: TokenStream):
     return tmp
 
 
+def token_list_check(tokens: TokenStream, target_list):
+    l_len = len(target_list)
+
+    for i in range(l_len):
+        if type(target_list[i]) == str:
+            if not (tokens.look_behind(i).type, tokens.look_behind(i).text) == (TokenType.KEY_WORD, target_list[i]):
+                show_error(
+                    tokens.look_behind(i).row_number, f'expect {target_list[i]} here~ ')
+            else:
+                continue
+        elif type(target_list[i]) is tuple:
+            if not (tokens.look_behind(i).type is TokenType.KEY_WORD and tokens.look_behind(i).text in target_list[i]):
+                types = ' or '.join(target_list[i])
+                show_error(
+                    tokens.look_behind(i).row_number, f'expect {types}  here~~ ')
+            else:
+                continue
+
+        elif tokens.look_behind(i).type != target_list[i]:
+            show_error(
+                tokens.tokenStream[tokens.pos + i].row_number, f'expect {str(target_list[i])} here~! ')
+
+
 def match_pri(tokens: TokenStream):
     tmp = None
     init_pos = tokens.pos
-    if tokens.peek().type == TokenType.ID:
+    if tokens == TokenType.ID:
         tmp = tokens.read()
-        if tokens.peek().type == TokenType.LEFT_PAREN:
+        if tokens == TokenType.LEFT_PAREN:
             func_name = tmp
             tmp = ASTnode(ASTtype.FUNC_CALL)
             tmp.FUNC_NAME = func_name
-            tmp.ARG_LIST = []
             tokens.read()
-            if tokens.peek().type != TokenType.RIGHT_PAREN:
-                first_arg = match_rel(tokens)
-                tmp.ARG_LIST.append(first_arg)
-            while tokens.peek().type != TokenType.RIGHT_PAREN:
-                expect(tokens, TokenType.COMMA,
-                       'use comma to seperate multiple arguments ~')
-                arg = match_rel(tokens)
-                tmp.ARG_LIST.append(arg)
+            tmp.ARG_LIST = parse_arg_list(tokens)
             expect(tokens, TokenType.RIGHT_PAREN, 'expect right parenthesis ~')
-    elif tokens.peek().type == TokenType.NUM:
+
+    elif tokens == TokenType.NUM:
         tmp = tokens.read()
-    elif tokens.peek().type == TokenType.LEFT_PAREN:
+    elif tokens == TokenType.LEFT_PAREN:
         tokens.read()
         child = match_rel(tokens)
         if child is None:
             tokens.reset_pos(init_pos)
             return child
-        if tokens.peek().type != TokenType.RIGHT_PAREN:
-            show_error(
-                tokens.tokenStream[tokens.pos].row_number, 'mis-matched parenthesis~')
-        else:
-            tmp = child
-            tokens.read()
+        expect(tokens, TokenType.RIGHT_PAREN, 'mis-matched parenthesis~')
+        tmp = child
     return tmp
 
 
@@ -71,7 +85,7 @@ def match_mul(tokens: TokenStream):
 
     left = match_pri(tokens)
 
-    while tokens.not_empty() and (tokens.peek().type == TokenType.STAR or tokens.peek().type == TokenType.DIV):
+    while tokens == TokenType.STAR or tokens == TokenType.DIV:
         tmp = ASTnode(ASTtype.MUL_EXP)
         if tokens.peek().type == TokenType.STAR:
             tmp.text = '*'
@@ -190,6 +204,7 @@ def parse_statement(tokens: TokenStream):
         return parse_IO_statement
     else:
         # ! if match failed,should not consume any token
+        smt = None
         if tokens.peek().type == TokenType.ID:
             smt = parse_assign_statement(tokens)
         if smt is None:
@@ -401,6 +416,64 @@ def parse_type():
     return
 
 
+def read_array_type(tokens: TokenStream):
+    token_list_check(tokens, ['array',
+                              TokenType.LEFT_SQUARE_BRACKET,  TokenType.NUM, TokenType.DOT, TokenType.DOT, TokenType.NUM, TokenType.RIGHT_SQUARE_BRACKET, 'of', ('char', 'integer')])
+    ty = ASTnode(ASTtype.ARRAY)
+    tokens.read()
+    tokens.read()
+    ty.LOWER_BOUND = tokens.read()
+    tokens.read()
+    tokens.read()
+    ty.UPPER_BOUND = tokens.read()
+    tokens.read()
+    ty.BASE_TYPE = tokens.read()
+    return ty
+
+
+#! VARIABLE is the dict of identifier and type
+
+def read_record_type(tokens: TokenStream):
+    token_list_check(tokens, 'record')
+    tokens.read()
+    ty = ASTnode(ASTtype.RECORD)
+    ty.VARIABLE = {}
+
+    kind = read_type(tokens)
+    vari = tokens.read()
+
+    ty.VARIABLE[vari.text] = kind
+
+    while tokens.peek().type != TokenType.COLON:
+        if tokens.peek().type != TokenType.COMMA:
+            show_error(tokens.peek().row_number,
+                       'expect comma to seperate identifiers~')
+        tokens.read()
+        vari = tokens.read()
+        ty.VARIABLE[vari.text] = kind
+
+    token_list_check(tokens, 'end')
+    tokens.read()
+
+
+def read_type(tokens: TokenStream):
+    ty = ''
+    if tokens.verify_key('char') or tokens.verify_key('integer'):
+        return tokens.read()
+    elif tokens.verify_key('array'):
+        return read_array_type(tokens)
+    elif tokens.verify_key('record'):
+        pass
+
+
+def parse_para_list(tokens: TokenStream):
+    para_list = []
+
+    pass
+
+# ! PROCNAME as name of procedure
+
+
 def parse_procedure(tokens: TokenStream):
     assert tokens.peek().type == TokenType.KEY_WORD and tokens.peek().text == 'procedure'
     tokens.read()
@@ -408,8 +481,30 @@ def parse_procedure(tokens: TokenStream):
     proc_blk = ASTnode(ASTtype.PROC_BLOCK)
     proc_blk.PROC_NAME = expect(
         tokens, TokenType.ID, 'expect procedure name ~')
+    expect(tokens, TokenType.LEFT_PAREN, 'expect left parenthesis~')
+    proc_blk.PARA_LIST = parse_para_list(tokens)
+    expect(tokens, TokenType.RIGHT_PAREN, 'expect left parenthesis~')
 
-    return
+    proc_blk.PARA_LIST = []
+    dec = ''
+    while dec is not None:
+        dec = parse_declaration(tokens)
+        if dec is None:
+            proc_blk.PARA_LIST.append(dec)
+
+    expect(tokens, TokenType.KEY_WORD and tokens.peek().text == 'begin')
+
+    proc_blk.SMT_LIST = []
+    smt = ''
+
+    while smt is not None:
+        smt = parse_statement(tokens)
+        if smt is not None:
+            proc_blk.SMT_LIST.append(smt)
+
+    expect(tokens, TokenType.KEY_WORD and tokens.peek().text == 'end')
+
+    return proc_blk
 
 
 if __name__ == '__main__':
@@ -420,16 +515,20 @@ if __name__ == '__main__':
     # source_text = '(1 + 2 ) >= (4 + 2 * 2)  = true ;'
     # source_text = 'add(1 + 2,1*2 );\nif 1 > 2 then a = 10; else a = 20; fi'
     # source_text = 'add(12 + 32*12 ,101);  '
-    # source_text = ' iden.age[add(1 * 23)] := 1 + 2 > 3 +2;'
-    source_text = 'add(1 * 23) ; '  # // bad text case
+    source_text = ' iden.age[add(1 * 23)] := 1 + 2 > 3 +2;'
+    # source_text = 'add(1 * 23) ; '  # // bad text case
+    # source_text = 'array [1..2] of char;'
     set_text(source_text)
     parsed_text = source_text + '.'
     context = CharSequence(parsed_text)
     scan(context)
     show_tokens(t_stream)
+    # tok = read_type(t_stream)
+    # draw_ast_tree(tok)
     node = parse_statement(t_stream)
     draw_ast_tree(node)
     print()
+    # print(type([]))
     # print('~'*40)
-    # node2 = parse_statement(t_stream)
-    # draw_ast_tree(node2)
+    node2 = parse_statement(t_stream)
+    draw_ast_tree(node2)
