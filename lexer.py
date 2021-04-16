@@ -1,12 +1,12 @@
 #!/bin/python3
 
 import header
-from header import TokenType, show_error
+from header import ASTnode, TokenType, show_error
 from header import Token
 from header import bcolors
+from header import TokenStream
 import pprint
 
-t_stream = header.TokenStream()
 row = 1
 
 
@@ -40,7 +40,7 @@ def parse_comment(context: header.CharSequence):
     context.pos = cur + 1
 
 
-def parse_ID_or_keyword(context: header.CharSequence):
+def parse_ID_or_keyword(context: header.CharSequence, t_stream):
     global t_strea
     global row
     tok = header.Token()
@@ -56,8 +56,7 @@ def parse_ID_or_keyword(context: header.CharSequence):
     t_stream.tokenStream.append(tok)
 
 
-def parse_number(context: header.CharSequence):
-    global t_stream
+def parse_number(context: header.CharSequence, t_stream):
     global row
     tok = Token()
     init_pos = context.pos
@@ -78,7 +77,7 @@ single_char_token = {'=': TokenType.EQUAL, ';': TokenType.COLON,
                      }
 
 
-def parse_rel_op(context: header.CharSequence):
+def parse_rel_op(context: header.CharSequence, t_stream):
     cur_char = context.stream[context.pos]
     tok = Token()
     tok.row_number = row
@@ -97,7 +96,7 @@ def parse_rel_op(context: header.CharSequence):
     t_stream.tokenStream.append(tok)
 
 
-def parse_dual_op(context: header.CharSequence):
+def parse_dual_op(context: header.CharSequence, t_stream):
     tok = Token()
     tok.row_number = row
     if context.stream[context.pos:context.pos + 2] == ':=':
@@ -111,14 +110,14 @@ def parse_dual_op(context: header.CharSequence):
 def scan(context: header.CharSequence):
     context.stream = context.stream.strip()
     seq_len = len(context.stream)
-
+    t_stream = TokenStream()
     while context.pos < seq_len:
         trim_space(context)
         cur_char = context.stream[context.pos]
         if cur_char.isalpha():
-            parse_ID_or_keyword(context)
+            parse_ID_or_keyword(context, t_stream)
         elif cur_char.isdigit():
-            parse_number(context)
+            parse_number(context, t_stream)
         elif cur_char in single_char_token:
             tok = Token()
             tok.row_number = row
@@ -128,8 +127,9 @@ def scan(context: header.CharSequence):
         elif cur_char == '{':
             parse_comment(context)
         elif cur_char in ('>', '<'):
-            parse_rel_op(context)
+            parse_rel_op(context, t_stream)
         elif context.stream[context.pos:context.pos + 2] in (':=', '!='):
-            parse_dual_op(context)
+            parse_dual_op(context, t_stream)
         else:
             show_error(t_stream.tokenStream[-1].row_number, 'unknown token~')
+    return t_stream

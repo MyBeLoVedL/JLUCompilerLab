@@ -5,6 +5,7 @@ from pprint import pprint
 from collections import deque
 from typing import Any
 import heapq
+import abc
 
 
 class Stu:
@@ -46,6 +47,25 @@ class pq():
         return heapq.heappop(self.Q)[-1]
 
 
+class Animal(metaclass=abc.ABCMeta):
+    def __init__(self, name) -> None:
+        self.name = name
+
+    @abc.abstractmethod
+    def tell(self):
+        # print("I am animal")
+        pass
+
+
+class Man(Animal):
+    # def __init__(self, name, gender):
+    #     super().__init__(name)
+    #     self.gender = gender
+
+    def tell(self):
+        print("I am man")
+
+
 if __name__ == '__main__':
     # s = Stu('altair')
     # s.age = 20
@@ -53,8 +73,12 @@ if __name__ == '__main__':
     # s.gender = 'unknown'
     # pprint(s.__dict__)
 
-    pq = pq()
-    pq.push("altair", 10)
-    pq.push("veaga", 12)
-    pq.push("Sirus", 2)
-    print(pq.Q)
+    a = Man('altair')
+    a.tell()
+    # b = Animal('vvvvv')
+    # b.tell()
+    # pq = pq()
+    # pq.push("altair", 10)
+    # pq.push("veaga", 12)
+    # pq.push("Sirus", 2)
+    # print(pq.Q)
