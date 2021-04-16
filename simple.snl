@@ -2,12 +2,12 @@ program p
     {
         I am the comment!
     }
-    type t = integer;
+    type t = 234integer;
     var t v1;
     char v2;
-
+    
     begin
         read(v1);
-        v1 := v1 + 10;
+        v1:=v1+10;
         write(v1)
-end.
+end. 

@@ -4,7 +4,7 @@ import enum
 
 
 keywords = set(["program", "var", "integer", "char", "procedure", "begin", "end", "id", "array",
-                "intc", "if", 'fi', "then", "else", "fi", "while", "do", "endwh", "return", "array", "read", "write", "type"])
+                "intc", "if", 'fi', "then", "else", "fi", "while", "do", "endwh", "return", "array", "read", "write", "type", "of", "record"])
 
 to_be_parsed_text = 'hem'
 
@@ -63,6 +63,12 @@ class Token:
         self.type = type
         self.text = text
 
+    def __eq__(self, other):
+        if type(other) == str:
+            return self.type == TokenType.KEY_WORD and self.text == other
+        else:
+            return self.type == other
+
 
 class TokenStream:
     def __init__(self):
@@ -86,6 +92,15 @@ class TokenStream:
     def not_empty(self):
         return self.pos < len(self.tokenStream)
 
+    def look_behind(self, i):
+        return self.tokenStream[self.pos + i]
+
+    def verify_key(self, keyword: str):
+        return self.peek().type == TokenType.KEY_WORD and self.peek().text == keyword
+
+    def __eq__(self, other):
+        return self.tokenStream[self.pos] == other
+
 
 class ASTnode:
     def __init__(self, type, text=''):
@@ -95,6 +110,12 @@ class ASTnode:
 
     def addChild(self, child):
         self.child.append(child)
+
+    def __repr__(self) -> str:
+        pass
+
+    def __str__(self) -> str:
+        pass
 
 
 class ASTtype(enum.Enum):
@@ -110,6 +131,11 @@ class ASTtype(enum.Enum):
     INPUT_SMT = 9
     OUTPUT_SMT = 10
     FUNC_CALL = 11
+    ASG_SMT = 12
+    PROC_BLOCK = 13
+    PARAMETER = 14
+    ARRAY = 15
+    RECORD = 16
 
 
 def set_text(text):
@@ -158,6 +184,15 @@ def draw_ast_tree_helper(root, sep):
                   end=bcolors.WARNING + ' args: ' + bcolors.ENDC)
             for arg in root.ARG_LIST:
                 print(str(arg.type), end=' ')
+        elif root.type == ASTtype.ASG_SMT:
+            # print(sep + str(root.type) + ':')
+            print(sep + '   ' + root.VARI.text, end='')
+            if root.STRUCT is not None:
+                print('.' + root.STRUCT.text, end='')
+            if root.ARR_INDEX is not None:
+                print(f'[{str(root.ARR_INDEX.type)}]', end='')
+            print(' := ' + str(root.EXP.type))
+
         for c in root.child:
             draw_ast_tree_helper(c, sep + ' '*4)
     else:

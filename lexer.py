@@ -41,7 +41,7 @@ def parse_comment(context: header.CharSequence):
 
 
 def parse_ID_or_keyword(context: header.CharSequence):
-    global t_stream
+    global t_strea
     global row
     tok = header.Token()
     init_pos = context.pos
@@ -73,7 +73,8 @@ def parse_number(context: header.CharSequence):
 single_char_token = {'=': TokenType.EQUAL, ';': TokenType.COLON,
                      '(': TokenType.LEFT_PAREN, ')': TokenType.RIGHT_PAREN,
                      '+': TokenType.PLUS, '-': TokenType.MINUS, '*': TokenType.STAR, '/': TokenType.DIV,
-                     '.': TokenType.DOT, ',': TokenType.COMMA
+                     '.': TokenType.DOT, ',': TokenType.COMMA, '[': TokenType.LEFT_SQUARE_BRACKET,
+                     ']': TokenType.RIGHT_SQUARE_BRACKET
                      }
 
 
@@ -130,3 +131,5 @@ def scan(context: header.CharSequence):
             parse_rel_op(context)
         elif context.stream[context.pos:context.pos + 2] in (':=', '!='):
             parse_dual_op(context)
+        else:
+            show_error(t_stream.tokenStream[-1].row_number, 'unknown token~')
