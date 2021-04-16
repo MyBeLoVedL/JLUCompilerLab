@@ -11,8 +11,22 @@ def parse_declaration(tokens: TokenStream):
     pass
 
 
-def parse_variable():
-    return
+def parse_variable(tokens: TokenStream):
+    # {name, type}
+    declared_variables = {}
+    assert (tokens.peek().type ==
+            TokenType.KEY_WORD and tokens.peek().text == 'var')
+    tokens.read()
+    if tokens.peek().type is None:
+        show_error(tokens.peek().row_number, "the type of identifier cannot be null");
+    tokens.read()
+    if tokens.peek().text is None:
+        show_error(tokens.peek().row_number, "the name of identifier cannot be null")
+    if tokens.peek().text in declared_variables:
+        show_error(tokens.peek().row_number, "the variable has already been declared")
+    else:
+        declared_variables[tokens.text] = tokens.type
+    return declared_variables
 
 
 def parse_type():
