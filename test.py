@@ -2,8 +2,9 @@
 
 
 from pprint import pprint
-
+from collections import deque
 from typing import Any
+import heapq
 
 
 class Stu:
@@ -24,6 +25,27 @@ class Stu:
         print('setting attribute')
 
 
+def search(text, pat, n):
+    context = deque(maxlen=n)
+    for line in text:
+        if pat in line:
+            yield line, context
+        context.append(line)
+
+
+class pq():
+    def __init__(self):
+        self.Q = []
+        self.I = 0
+
+    def push(self, item, pri):
+        heapq.heappush(self.Q, (-pri, self.I, item))
+        self.I += 1
+
+    def pop(self):
+        return heapq.heappop(self.Q)[-1]
+
+
 if __name__ == '__main__':
     # s = Stu('altair')
     # s.age = 20
@@ -31,4 +53,8 @@ if __name__ == '__main__':
     # s.gender = 'unknown'
     # pprint(s.__dict__)
 
-    dir(int)
+    pq = pq()
+    pq.push("altair", 10)
+    pq.push("veaga", 12)
+    pq.push("Sirus", 2)
+    print(pq.Q)
