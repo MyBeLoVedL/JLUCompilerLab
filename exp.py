@@ -22,6 +22,19 @@ def parse_arg_list(tokens: TokenStream):
     return tmp
 
 
+def parse_id_list(tokens: TokenStream):
+    res = []
+    if tokens != TokenType.ID:
+        show_error(tokens.peek().row_number, "expect at least one identifier~")
+
+    res.append(tokens.read())
+    while tokens == TokenType.COMMA:
+        token_list_check(tokens, [TokenType.COMMA, TokenType.ID])
+        tokens.read()
+        res.append(tokens.read())
+    return res
+
+
 def token_list_check(tokens: TokenStream, target_list):
     l_len = len(target_list)
 

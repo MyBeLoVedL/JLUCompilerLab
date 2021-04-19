@@ -69,6 +69,12 @@ class Token:
         else:
             return self.type == other
 
+    def __str__(self) -> str:
+        if self.type == TokenType.KEY_WORD:
+            return f'{self.text}'
+        else:
+            return f'{self.text} {self.type}'
+
 
 class TokenStream:
     def __init__(self):
@@ -111,11 +117,8 @@ class ASTnode:
     def addChild(self, child):
         self.child.append(child)
 
-    def __repr__(self) -> str:
-        pass
-
     def __str__(self) -> str:
-        pass
+        return f'{self.text} type{self.type}'
 
 
 class ASTtype(enum.Enum):
@@ -136,6 +139,7 @@ class ASTtype(enum.Enum):
     PARAMETER = 14
     ARRAY = 15
     RECORD = 16
+    VARI_DEC = 17
 
 
 def set_text(text):

@@ -3,7 +3,6 @@
 
 from pprint import pprint
 from collections import deque
-from typing import Any
 import heapq
 import abc
 
@@ -21,9 +20,6 @@ class Stu:
         print('accessing attribute')
         # return 'male'
         # return self.__dict__[attr].upper()
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        print('setting attribute')
 
 
 def search(text, pat, n):
@@ -47,8 +43,8 @@ class pq():
         return heapq.heappop(self.Q)[-1]
 
 
-class Animal(metaclass=abc.ABCMeta):
-    def __init__(self, name) -> None:
+class Animal():
+    def __init__(self, name) :
         self.name = name
 
     @abc.abstractmethod
