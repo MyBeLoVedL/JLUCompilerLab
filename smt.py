@@ -3,14 +3,14 @@ from exp import *
 
 
 def parse_statement(tokens: TokenStream):
-    if tokens.peek().type == TokenType.KEY_WORD and tokens.peek().text == 'return':
+    if tokens == 'return':
         return parse_return_statement(tokens)
-    elif tokens.peek().type == TokenType.KEY_WORD and tokens.peek().text == 'if':
+    elif tokens == 'if':
         return parse_condition_statement(tokens)
-    elif tokens.peek().type == TokenType.KEY_WORD and tokens.peek().text == 'while':
+    elif tokens == 'while':
         return parse_loop_statement(tokens)
-    elif tokens.peek().type == TokenType.KEY_WORD and tokens.peek().text in ('read', 'write'):
-        return parse_IO_statement
+    elif tokens == 'read' or tokens == 'write':
+        return parse_IO_statement(tokens)
     else:
         # ! if match failed,should not consume any token
         smt = None
@@ -96,40 +96,31 @@ def parse_return_statement(tokens: TokenStream):
 
 
 def parse_IO_statement(tokens: TokenStream):
-    if tokens.peek().text == 'read':
-        io_smt = ASTnode(ASTtype.INPUT_SMT)
+    if tokens == 'read':
         tokens.read()
-        if tokens.peek().type != TokenType.LEFT_PAREN:
-            show_error(tokens.peek().row_number, 'expect parenthesis~')
+        token_list_check(tokens, [
+                         TokenType.LEFT_PAREN, TokenType.ID, TokenType.RIGHT_PAREN, TokenType.COLON])
         tokens.read()
 
-        if tokens.type == TokenType.ID:
-            show_error(tokens.peek().row_number,
-                       'expect an identifier in read statement ~')
-        # ! for astnode with single statement ,we use child directly
+        io_smt = ASTnode(ASTtype.INPUT_SMT)
         io_smt.addChild(tokens.read())
 
-        if tokens.peek().type != TokenType.RIGHT_PAREN:
-            show_error(tokens.peek().row_number, 'expect parenthesis~')
         tokens.read()
-    elif tokens.peek().text == 'write':
+        tokens.read()
+        return io_smt
+
+    else:
+        tokens.read()
+        token_list_check(tokens, [
+                         TokenType.LEFT_PAREN, TokenType.ID, TokenType.RIGHT_PAREN, TokenType.COLON])
+        tokens.read()
+
         io_smt = ASTnode(ASTtype.OUTPUT_SMT)
-        tokens.read()
-        if tokens.peek().type != TokenType.LEFT_PAREN:
-            show_error(tokens.peek().row_number, 'expect parenthesis~')
-        tokens.read()
+        io_smt.addChild(tokens.read())
 
-        exp = match_rel(tokens)
-        if exp is None:
-            show_error(tokens.peek().row_number,
-                       'expression between output statement')
-        io_smt.addChild(exp)
-
-        if tokens.peek().type != TokenType.RIGHT_PAREN:
-            show_error(tokens.peek().row_number, 'expect parenthesis~')
         tokens.read()
-
-    return io_smt
+        tokens.read()
+        return io_smt
 
 
 def parse_loop_statement(tokens: TokenStream):

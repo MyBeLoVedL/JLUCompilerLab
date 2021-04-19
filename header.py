@@ -135,12 +135,13 @@ class ASTtype(enum.Enum):
     OUTPUT_SMT = 10
     FUNC_CALL = 11
     ASG_SMT = 12
-    PROC_BLOCK = 13
+    PROCEDURE = 13
     PARAMETER = 14
     ARRAY = 15
     RECORD = 16
     VARI_DEC = 17
     TYPE_DEC = 18
+    PROGRAM = 19
 
 
 def set_text(text):

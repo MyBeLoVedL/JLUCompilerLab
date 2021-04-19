@@ -12,7 +12,7 @@ def parse_declaration(tokens: TokenStream):
         return parse_procedure_dec(tokens)
     elif tokens == 'type':
         return parse_type_dec(tokens)
-    else:
+    elif tokens == 'var':
         return parse_variable_dec(tokens)
     return None
 
@@ -34,6 +34,8 @@ def parse_type_dec(tokens: TokenStream):
             break
         tokens.read()
 
+    token_list_check(tokens, [TokenType.COLON])
+    tokens.read()
     return ty
 
 #! for each identifier,we store its name and row number
@@ -41,6 +43,8 @@ def parse_type_dec(tokens: TokenStream):
 
 def parse_variable_dec(tokens: TokenStream):
     init_pos = tokens.pos
+    token_list_check(tokens, ['var'])
+    tokens.read()
     kind = read_type(tokens)
     if kind is None:
         tokens.pos = init_pos
@@ -65,6 +69,10 @@ def read_type(tokens: TokenStream):
         return read_array_type(tokens)
     elif tokens.verify_key('record'):
         return read_record_type(tokens)
+    elif tokens == TokenType.ID:
+        return tokens.read()
+    else:
+        show_error(tokens.peek().row_number, 'unknown type ~')
 
 
 def read_array_type(tokens: TokenStream):
@@ -141,7 +149,7 @@ def parse_para_list(tokens: TokenStream):
 
 def parse_procedure_dec(tokens: TokenStream):
     token_list_check(tokens, ['procedure', TokenType.ID, TokenType.LEFT_PAREN])
-    proc_blk = ASTnode(ASTtype.PROC_BLOCK)
+    proc_blk = ASTnode(ASTtype.PROCEDURE)
     tokens.read()
     proc_blk.PROC_NAME = tokens.read()
     tokens.read()
@@ -150,34 +158,46 @@ def parse_procedure_dec(tokens: TokenStream):
     token_list_check(tokens, [TokenType.RIGHT_PAREN, TokenType.COLON])
     tokens.read()
     tokens.read()
+    proc_blk.DEC_list, proc_blk.SMT_LIST = parse_dec_body(tokens)
 
-    proc_blk.DEC_LIST = []
+    return proc_blk
+
+
+def parse_dec_body(tokens: TokenStream):
+
+    DEC_LIST = []
 
     while True:
         dec = parse_declaration(tokens)
         if dec is None:
             break
-        proc_blk.DEC_LIST.append(dec)
+        DEC_LIST.append(dec)
 
     token_list_check(tokens, ['begin'])
     tokens.read()
 
-    proc_blk.SMT_LIST = []
+    SMT_LIST = []
 
     while True:
         smt = parse_statement(tokens)
         if smt is None:
             break
-        proc_blk.SMT_LIST.append(smt)
+        SMT_LIST.append(smt)
 
     token_list_check(tokens, ['end'])
     tokens.read()
 
-    return proc_blk
+    return (DEC_LIST, SMT_LIST)
 
 
 def __llparse(t_stream: TokenStream) -> ASTnode:
-    pass
+    token_list_check(t_stream, ['program', TokenType.ID])
+    prog = ASTnode(ASTtype.PROGRAM)
+    t_stream.read()
+    prog.PROG_NAME = t_stream.read().text
+    prog.DEC_LIST, prog.SMT_LIST = parse_dec_body(t_stream)
+
+    return prog
 
 
 def __lrparse(t_stream: TokenStream) -> ASTnode:
@@ -188,7 +208,7 @@ if __name__ == '__main__':
     lines = []
     with open('simple.snl', 'r') as f:
         lines = f.readlines()
-    # source_text = ''.join(lines)
+    source_text = ''.join(lines)
     # source_text = '(1 + 2 ) >= (4 + 2 * 2)  = true ;'
     # source_text = 'add(1 + 2,1*2 );\nif 1 > 2 then a = 10; else a = 20; fi'
     # source_text = 'add(12 + 32*12 ,101);  '
@@ -204,7 +224,7 @@ if __name__ == '__main__':
     #         return c;
     #     end
     # """
-    source_text = "type t = integer,c = char,stu = record char a;integer age;end"
+    # source_text = "type t = integer,c = char,stu = record char a;integer age;end"
     set_text(source_text)
     parsed_text = source_text + '.'
     context = CharSequence(parsed_text)
@@ -213,11 +233,11 @@ if __name__ == '__main__':
     # tok = read_type(t_stream)
     # draw_ast_tree(tok)
     # smt.parse_arg_list()
-    node = parse_declaration(t_stream)
+    node = __llparse(t_stream)
     print(node.type)
-    # draw_ast_tree(node)
-    for id, kind in node.DEC.items():
-        print(f'{id} {kind}')
+    draw_ast_tree(node)
+    # for id, kind in node.DEC.items():
+    #     print(f'{id} {kind}')
     # for (id, row), kind in node.VARI.items():
     #     print(f'{id} at row {row} of type {kind}')
     # print(type([]))
