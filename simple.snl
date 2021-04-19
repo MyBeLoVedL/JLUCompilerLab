@@ -2,7 +2,7 @@ program p
     {
         I am the comment!
     }
-    type t = 234integer;
+    type t = integer,c = char;
     var t v1;
     char v2;
     

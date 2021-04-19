@@ -18,7 +18,23 @@ def parse_declaration(tokens: TokenStream):
 
 
 def parse_type_dec(tokens: TokenStream):
-    return None
+    tokens.read()
+    ty = ASTnode(ASTtype.TYPE_DEC)
+    ty.DEC = {}
+
+    while True:
+        token_list_check(tokens, [TokenType.ID, TokenType.EQUAL])
+        id = tokens.read().text
+        tokens.read()
+        kind = read_type(tokens)
+        if kind is None:
+            show_error(tokens.peek().row_number, "not valid type declaration~")
+        ty.DEC[id] = kind
+        if tokens != TokenType.COMMA:
+            break
+        tokens.read()
+
+    return ty
 
 #! for each identifier,we store its name and row number
 
@@ -180,14 +196,15 @@ if __name__ == '__main__':
     # source_text = 'add(1 * 23) ; '  # // bad text case
     # source_text = 'record array [1..2] of char a,b,c ;char d; end st1,st2;'
     # source_text = ')'
-    source_text = """
-        procedure add(integer a,b);
-        integer c;
-        begin 
-            c := a+b;
-            return c;
-        end
-    """
+    # source_text = """
+    #     procedure add(integer a,b);
+    #     integer c;
+    #     begin
+    #         c := a+b;
+    #         return c;
+    #     end
+    # """
+    source_text = "type t = integer,c = char,stu = record char a;integer age;end"
     set_text(source_text)
     parsed_text = source_text + '.'
     context = CharSequence(parsed_text)
@@ -199,8 +216,8 @@ if __name__ == '__main__':
     node = parse_declaration(t_stream)
     print(node.type)
     # draw_ast_tree(node)
-    # for id, kind in node:
-    #     print(f'{id} {kind}')
+    for id, kind in node.DEC.items():
+        print(f'{id} {kind}')
     # for (id, row), kind in node.VARI.items():
     #     print(f'{id} at row {row} of type {kind}')
     # print(type([]))

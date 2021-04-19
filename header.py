@@ -140,6 +140,7 @@ class ASTtype(enum.Enum):
     ARRAY = 15
     RECORD = 16
     VARI_DEC = 17
+    TYPE_DEC = 18
 
 
 def set_text(text):
