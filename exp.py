@@ -138,11 +138,11 @@ def match_rel_low_priority(tokens: TokenStream):
 
     left = match_add(tokens)
 
-    while tokens.not_empty() and tokens.peek().type in (TokenType.LESS_THAT, TokenType.BIGGER_THAN, TokenType.LESS_THAN_OR_EQUAL, TokenType.BIGGER_THAN_OR_EQUAL):
+    while tokens.not_empty() and tokens.peek().type in (TokenType.LESS_THAN, TokenType.BIGGER_THAN, TokenType.LESS_THAN_OR_EQUAL, TokenType.BIGGER_THAN_OR_EQUAL):
         tmp = ASTnode(ASTtype.REL_EXP)
         if tokens.peek().type == TokenType.BIGGER_THAN:
             tmp.text = '>'
-        elif tokens.peek().type == TokenType.LESS_THAT:
+        elif tokens.peek().type == TokenType.LESS_THAN:
             tmp.text = '<'
         elif tokens.peek().type == TokenType.BIGGER_THAN_OR_EQUAL:
             tmp.text = '>='

@@ -161,8 +161,11 @@ def parse_condition_statement(tokens: TokenStream):
     tokens.read()
     cond_smt = ASTnode(ASTtype.COND_SMT)
     cond = match_rel(tokens)
+    # print(cond);
     if cond is None:
         show_error(tokens.peek().row_number, 'condition can\'t be null')
+    # print(tokens.peek().type)
+    # print(tokens.peek().text)
     if tokens.peek().type != TokenType.KEY_WORD or tokens.peek().text != 'then':
         show_error(tokens.peek().row_number, 'expect then after condition')
 

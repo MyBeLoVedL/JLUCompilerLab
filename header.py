@@ -34,7 +34,7 @@ class TokenType(enum.Enum):
     RIGHT_SQUARE_BRACKET = 9
     COLON = 10
     DOT = 11
-    LESS_THAT = 12
+    LESS_THAN = 12
     BIGGER_THAN = 13
     EQUAL = 14
     LEFT_BRACKET = 15

@@ -78,3 +78,17 @@ if __name__ == '__main__':
     # pq.push("veaga", 12)
     # pq.push("Sirus", 2)
     # print(pq.Q)
+
+'''
+阶段测试结果（词法分析 + 递归下降）
+# program begin之间 如果是关键字错误如ty，也会提示expect begin
+# 中文字符 会爆红宕机
+# 自定义类型 数字和非法字符开头可以报错，但字母开头如charchar，则可以成功识别不报错
+# 自定义类型 使用未定义类型，如tt而t不报错
+# 自定义类型 拼写错误 integet不报错
+# 分号是semi_colon 不是 colon
+# 识别数组 
+# 运算符 +* 不报错
+# write关键字的识别 拼写错误wrie不报错
+
+'''
