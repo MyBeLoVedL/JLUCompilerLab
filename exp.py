@@ -1,4 +1,3 @@
-
 from header import *
 from header import ASTtype
 
@@ -40,27 +39,55 @@ def token_list_check(tokens: TokenStream, target_list):
 
     for i in range(l_len):
         if type(target_list[i]) == str:
-            if not (tokens.look_behind(i).type, tokens.look_behind(i).text) == (TokenType.KEY_WORD, target_list[i]):
+            if not (tokens.look_behind(i).type,
+                    tokens.look_behind(i).text) == (TokenType.KEY_WORD,
+                                                    target_list[i]):
                 show_error(
-                    tokens.look_behind(i).row_number, f'expect {target_list[i]} here~ ')
+                    tokens.look_behind(i).row_number,
+                    f'expect {target_list[i]} here~ ')
             else:
                 continue
         elif type(target_list[i]) is tuple:
-            if not (tokens.look_behind(i).type is TokenType.KEY_WORD and tokens.look_behind(i).text in target_list[i]):
+            if not (tokens.look_behind(i).type is TokenType.KEY_WORD
+                    and tokens.look_behind(i).text in target_list[i]):
                 types = ' or '.join(target_list[i])
                 show_error(
-                    tokens.look_behind(i).row_number, f'expect {types}  here~~ ')
+                    tokens.look_behind(i).row_number,
+                    f'expect {types}  here~~ ')
             else:
                 continue
 
         elif tokens.look_behind(i).type != target_list[i]:
-            show_error(
-                tokens.tokenStream[tokens.pos + i].row_number, f'expect {str(target_list[i])} here~! ')
+            show_error(tokens.tokenStream[tokens.pos + i].row_number,
+                       f'expect {str(target_list[i])} here~! ')
 
+
+
+def match_id_more(tokens: TokenStream):
+    tmp = None
+    if tokens == TokenType.DOT:
+        tokens.read()
+        token_list_check(tokens, [TokenType.ID])
+        tmp = ASTnode(ASTtype.FIELD_VAR)
+        tmp.FIELD = tokens.read().text
+
+    if tokens == TokenType.LEFT_SQUARE_BRACKET:
+        if tmp is None:
+            tmp = ASTnode(ASTtype.FIELD_VAR)
+        tokens.read()
+        index = match_add(tokens)
+        if index is None:
+            show_error(tokens.peek().row_number,
+                        "expect a valid index here")
+        token_list_check(tokens, [TokenType.RIGHT_SQUARE_BRACKET])
+        tokens.read()
+        tmp.INDEX = index
+    return tmp
 
 def match_pri(tokens: TokenStream):
     tmp = None
     init_pos = tokens.pos
+    is_func = False
     if tokens == TokenType.ID:
         tmp = tokens.read()
         if tokens == TokenType.LEFT_PAREN:
@@ -70,7 +97,12 @@ def match_pri(tokens: TokenStream):
             tokens.read()
             tmp.ARG_LIST = parse_arg_list(tokens)
             expect(tokens, TokenType.RIGHT_PAREN, 'expect right parenthesis ~')
-
+            is_func = True
+        else:
+            res = match_id_more(tokens)
+            if res is not None:
+                res.text = tmp.text
+                tmp = res
     elif tokens == TokenType.NUM:
         tmp = tokens.read()
     elif tokens == TokenType.LEFT_PAREN:
@@ -99,8 +131,8 @@ def match_mul(tokens: TokenStream):
         tokens.read()
         right = match_pri(tokens)
         if right is None:
-            show_error(
-                tokens.tokenStream[tokens.pos].row_number, 'Expect expression after mul operator')
+            show_error(tokens.tokenStream[tokens.pos].row_number,
+                       'Expect expression after mul operator')
 
         tmp.addChild(left)
         tmp.addChild(right)
@@ -114,7 +146,8 @@ def match_add(tokens: TokenStream):
 
     left = match_mul(tokens)
 
-    while tokens.not_empty() and (tokens.peek().type == TokenType.PLUS or tokens.peek().type == TokenType.MINUS):
+    while tokens.not_empty() and (tokens.peek().type == TokenType.PLUS
+                                  or tokens.peek().type == TokenType.MINUS):
         tmp = ASTnode(ASTtype.ADD_EXP)
         if tokens.peek().type == TokenType.PLUS:
             tmp.text = '+'
@@ -123,8 +156,8 @@ def match_add(tokens: TokenStream):
         tokens.read()
         right = match_add(tokens)
         if right is None:
-            show_error(
-                tokens.tokenStream[tokens.pos - 1].row_number, 'Expect expression after plus operator')
+            show_error(tokens.tokenStream[tokens.pos - 1].row_number,
+                       'Expect expression after plus operator')
         tmp = ASTnode(ASTtype.ADD_EXP)
         tmp.addChild(left)
         tmp.addChild(right)
@@ -138,7 +171,9 @@ def match_rel_low_priority(tokens: TokenStream):
 
     left = match_add(tokens)
 
-    while tokens.not_empty() and tokens.peek().type in (TokenType.LESS_THAN, TokenType.BIGGER_THAN, TokenType.LESS_THAN_OR_EQUAL, TokenType.BIGGER_THAN_OR_EQUAL):
+    while tokens.not_empty() and tokens.peek().type in (
+            TokenType.LESS_THAN, TokenType.BIGGER_THAN,
+            TokenType.LESS_THAN_OR_EQUAL, TokenType.BIGGER_THAN_OR_EQUAL):
         tmp = ASTnode(ASTtype.REL_EXP)
         if tokens.peek().type == TokenType.BIGGER_THAN:
             tmp.text = '>'
@@ -152,8 +187,8 @@ def match_rel_low_priority(tokens: TokenStream):
         tokens.read()
         right = match_add(tokens)
         if right is None:
-            show_error(
-                tokens.tokenStream[tokens.pos].row_number, 'Expect expression after relational  operator')
+            show_error(tokens.tokenStream[tokens.pos].row_number,
+                       'Expect expression after relational  operator')
         tmp.addChild(left)
         tmp.addChild(right)
         left = tmp
@@ -165,7 +200,8 @@ def match_rel(tokens: TokenStream):
     init_pos = tokens.pos
     left = match_rel_low_priority(tokens)
 
-    while tokens.not_empty() and tokens.peek().type in (TokenType.EQUAL, TokenType.NOT_EQUAL):
+    while tokens.not_empty() and tokens.peek().type in (TokenType.EQUAL,
+                                                        TokenType.NOT_EQUAL):
         tmp = ASTnode(ASTtype.REL_EXP)
         if tokens.peek().type == TokenType.EQUAL:
             tmp.text = '='
@@ -175,8 +211,8 @@ def match_rel(tokens: TokenStream):
         tokens.read()
         right = match_rel_low_priority(tokens)
         if right is None:
-            show_error(
-                tokens.tokenStream[tokens.pos].row_number, 'Expect expression after relational  operator')
+            show_error(tokens.tokenStream[tokens.pos].row_number,
+                       'Expect expression after relational  operator')
         tmp.addChild(left)
         tmp.addChild(right)
         left = tmp

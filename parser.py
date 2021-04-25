@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-
 from header import *
-from exp import token_list_check, expect, parse_id_list
+from exp import match_pri, token_list_check, expect, parse_id_list
 from lexer import scan
-from smt import parse_statement
+from smt import parse_loop_statement, parse_statement
 
 
 def parse_declaration(tokens: TokenStream):
@@ -37,6 +36,7 @@ def parse_type_dec(tokens: TokenStream):
     token_list_check(tokens, [TokenType.COLON])
     tokens.read()
     return ty
+
 
 #! for each identifier,we store its name and row number
 
@@ -76,8 +76,11 @@ def read_type(tokens: TokenStream):
 
 
 def read_array_type(tokens: TokenStream):
-    token_list_check(tokens, ['array',
-                              TokenType.LEFT_SQUARE_BRACKET,  TokenType.NUM, TokenType.DOT, TokenType.DOT, TokenType.NUM, TokenType.RIGHT_SQUARE_BRACKET, 'of', ('char', 'integer')])
+    token_list_check(tokens, [
+        'array', TokenType.LEFT_SQUARE_BRACKET, TokenType.NUM, TokenType.DOT,
+        TokenType.DOT, TokenType.NUM, TokenType.RIGHT_SQUARE_BRACKET, 'of',
+        ('char', 'integer')
+    ])
     ty = ASTnode(ASTtype.ARRAY)
     tokens.read()
     tokens.read()
@@ -92,6 +95,7 @@ def read_array_type(tokens: TokenStream):
 
 
 #! VARIABLE is the dict of identifier and type
+
 
 def read_record_type(tokens: TokenStream):
     token_list_check(tokens, ['record'])
@@ -124,8 +128,7 @@ def parse_para_list(tokens: TokenStream):
         tokens.read()
     kind = read_type(tokens)
     if kind is None:
-        show_error(tokens.peek().row_number,
-                   "expect type here~")
+        show_error(tokens.peek().row_number, "expect type here~")
     varis = parse_id_list(tokens)
     for var in varis:
         para_list.append((var.text, kind))
@@ -143,6 +146,7 @@ def parse_para_list(tokens: TokenStream):
         for var in varis:
             para_list.append((var.text, kind))
     return para_list
+
 
 # ! PROCNAME as name of procedure
 
@@ -209,6 +213,7 @@ if __name__ == '__main__':
     with open('simple.snl', 'r') as f:
         lines = f.readlines()
     source_text = ''.join(lines)
+    # source_text = 'a[1 + 2] := 20;'
     # source_text = '(1 + 2 ) >= (4 + 2 * 2)  = true ;'
     # source_text = 'add(1 + 2,1*2 );\nif 1 > 2 then a = 10; else a = 20; fi'
     # source_text = 'add(12 + 32*12 ,101);  '
@@ -217,14 +222,21 @@ if __name__ == '__main__':
     # source_text = 'record array [1..2] of char a,b,c ;char d; end st1,st2;'
     # source_text = ')'
     # source_text = """
-    #     procedure add(integer a,b);
-    #     integer c;
-    #     begin
-    #         c := a+b;
-    #         return c;
-    #     end
+    #         while k < j do
+    #             if a[k + 1] < a[k]
+    #             then
+    #                 t := a[k];
+    #                 a[k] := a[k + 1];
+    #                 a[k + 1] := t;
+    #             else  temp := 0;
+    #             fi;
+    #         k := k + 1;
+    #         endwh;
     # """
     # source_text = "type t = integer,c = char,stu = record char a;integer age;end"
+    # source_text = """
+    #     q(num);
+    # """
     set_text(source_text)
     parsed_text = source_text + '.'
     context = CharSequence(parsed_text)
@@ -234,8 +246,12 @@ if __name__ == '__main__':
     # draw_ast_tree(tok)
     # smt.parse_arg_list()
     node = __llparse(t_stream)
-    print(node.type)
+    # node = match_pri(t_stream)
+    # node = parse_statement(t_stream)
+    # node3 = parse_statement(t_stream)
+    # print(node.type)
     draw_ast_tree(node)
+    # print(node.INDEX)
     # for id, kind in node.DEC.items():
     #     print(f'{id} {kind}')
     # for (id, row), kind in node.VARI.items():
@@ -244,5 +260,3 @@ if __name__ == '__main__':
     # print('~'*40)
     # node2 = parse_statement(t_stream)
     # draw_ast_tree(node2)
-
-

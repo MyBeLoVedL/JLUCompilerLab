@@ -142,6 +142,7 @@ class ASTtype(enum.Enum):
     VARI_DEC = 17
     TYPE_DEC = 18
     PROGRAM = 19
+    FIELD_VAR = 20
 
 
 def set_text(text):
