@@ -62,7 +62,6 @@ def token_list_check(tokens: TokenStream, target_list):
                        f'expect {str(target_list[i])} here~! ')
 
 
-
 def match_id_more(tokens: TokenStream):
     tmp = None
     if tokens == TokenType.DOT:
@@ -78,11 +77,12 @@ def match_id_more(tokens: TokenStream):
         index = match_add(tokens)
         if index is None:
             show_error(tokens.peek().row_number,
-                        "expect a valid index here")
+                       "expect a valid index here")
         token_list_check(tokens, [TokenType.RIGHT_SQUARE_BRACKET])
         tokens.read()
         tmp.INDEX = index
     return tmp
+
 
 def match_pri(tokens: TokenStream):
     tmp = None
@@ -90,6 +90,9 @@ def match_pri(tokens: TokenStream):
     is_func = False
     if tokens == TokenType.ID:
         tmp = tokens.read()
+        if (table_walk(tmp.text) < 0):
+            show_error(tokens.peek().row_number,
+                       f'symbol {tmp.text} with no definition')
         if tokens == TokenType.LEFT_PAREN:
             func_name = tmp
             tmp = ASTnode(ASTtype.FUNC_CALL)

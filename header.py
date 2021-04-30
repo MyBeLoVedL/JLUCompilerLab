@@ -7,6 +7,41 @@ keywords = set(["program", "var", "integer", "char", "procedure", "begin", "end"
                 "intc", "if", 'fi', "then", "else", "fi", "while", "do", "endwh", "return", "array", "read", "write", "type", "of", "record"])
 
 to_be_parsed_text = 'hem'
+scope = []
+table = []
+level = 0
+
+
+def table_walk(id_name):
+    i = len(table) - 1
+    while i > 0:
+        if type(table[i]) is int:
+            i = table[i]
+        elif table[i].text == id_name:
+            break
+        else:
+            i -= 1
+
+    if i == 0:
+        return -1
+    else:
+        return i
+
+
+def level_walk(id_name):
+    i = len(table) - 1
+    while i >= scope[-1]:
+        if type(table[i]) is int:
+            i = table[i]
+        elif table[i].text == id_name:
+            break
+        else:
+            i -= 1
+
+    if i < scope[-1]:
+        return -1
+    else:
+        return i
 
 
 class bcolors:
@@ -143,6 +178,53 @@ class ASTtype(enum.Enum):
     TYPE_DEC = 18
     PROGRAM = 19
     FIELD_VAR = 20
+
+
+class Symbol():
+    def __init__(self, text, value):
+        self.text = text
+        self.value = value
+
+
+class Sym_const(Symbol):
+    def __init__(self, text, kind, value=None):
+        super().__init__(text, value)
+        self.kind = kind
+
+
+class Sym_type(Symbol):
+    def __init__(self, text, real_type):
+        self.text = text
+        self.value = real_type
+
+
+class Sym_vari(Symbol):
+    def __init__(self, text, type, level, value=None):
+        super().__init__(text, value)
+        self.level = level
+        self.type = type
+
+
+class Sym_proc(Symbol):
+    def __init__(self, text, return_type, level, para):
+        super().__init__(text, return_type)
+        self.level = level
+        self.para = para
+
+
+class Sym_arr(Symbol):
+    def __init__(self, text, low, up, ele_type):
+        self.text = text
+        self.low = low
+        self.up = up
+        self.ele_type = ele_type
+
+
+class Sym_rec(Symbol):
+    def __init__(self, text, size, field):
+        self.text = text
+        self.size = size
+        self.field = field
 
 
 def set_text(text):

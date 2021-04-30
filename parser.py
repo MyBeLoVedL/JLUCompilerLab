@@ -17,6 +17,7 @@ def parse_declaration(tokens: TokenStream):
 
 
 def parse_type_dec(tokens: TokenStream):
+    global scope, table, level
     tokens.read()
     ty = ASTnode(ASTtype.TYPE_DEC)
     ty.DEC = {}
@@ -28,7 +29,12 @@ def parse_type_dec(tokens: TokenStream):
         kind = read_type(tokens)
         if kind is None:
             show_error(tokens.peek().row_number, "not valid type declaration~")
+        if table_walk(id) >= 0:
+            show_error(tokens.peek().row_number,
+                       f'symbol {id} redefinition')
         ty.DEC[id] = kind
+        p = Sym_type(id, kind)
+        table.append(p)
         if tokens != TokenType.COMMA:
             break
         tokens.read()
@@ -42,6 +48,7 @@ def parse_type_dec(tokens: TokenStream):
 
 
 def parse_variable_dec(tokens: TokenStream):
+    global scope, table, level
     init_pos = tokens.pos
     token_list_check(tokens, ['var'])
     tokens.read()
@@ -49,8 +56,14 @@ def parse_variable_dec(tokens: TokenStream):
     if kind is None:
         tokens.pos = init_pos
         return None
-
     varis = parse_id_list(tokens)
+    row = tokens.peek().row_number
+    for v in varis:
+        if level_walk(v.text) >= 0:
+            show_error(row,
+                       f'symbol {v.text} redefinition')
+        p = Sym_vari(v.text, kind, level, None)
+        table.append(p)
     token_list_check(tokens, [TokenType.COLON])
     tokens.read()
     dec = ASTnode(ASTtype.VARI_DEC)
@@ -152,17 +165,39 @@ def parse_para_list(tokens: TokenStream):
 
 
 def parse_procedure_dec(tokens: TokenStream):
+    global scope, table, level
+    level += 1
     token_list_check(tokens, ['procedure', TokenType.ID, TokenType.LEFT_PAREN])
     proc_blk = ASTnode(ASTtype.PROCEDURE)
     tokens.read()
-    proc_blk.PROC_NAME = tokens.read()
+    proc_blk.PROC_NAME = tokens.read().text
     tokens.read()
 
     proc_blk.PARA_LIST = parse_para_list(tokens)
+    p = Sym_proc(proc_blk.PROC_NAME, None, level, proc_blk.PARA_LIST)
+    if table_walk(p.text) >= 0:
+        print(f'redef pos {table_walk(p.text)}')
+        show_error(tokens.peek().row_number,
+                   f'symbol {p.text} redefinition')
+    table.append(p)
+    scope.append(len(table))
+
+    row = tokens.peek().row_number
+    for para in proc_blk.PARA_LIST:
+        if level_walk(para[0]) >= 0:
+            show_error(row,
+                       f'symbol {para[0]} redefinition')
+        arg = Sym_vari(para[0], para[1], level, None)
+        table.append(arg)
+
     token_list_check(tokens, [TokenType.RIGHT_PAREN, TokenType.COLON])
     tokens.read()
     tokens.read()
+
     proc_blk.DEC_list, proc_blk.SMT_LIST = parse_dec_body(tokens)
+    table.append(scope[-1]-1)
+    del scope[-1]
+    level -= 1
 
     return proc_blk
 
@@ -195,12 +230,17 @@ def parse_dec_body(tokens: TokenStream):
 
 
 def __llparse(t_stream: TokenStream) -> ASTnode:
+    global scope, table, level
     token_list_check(t_stream, ['program', TokenType.ID])
     prog = ASTnode(ASTtype.PROGRAM)
     t_stream.read()
     prog.PROG_NAME = t_stream.read().text
+    scope.append(0)
+    p = Sym_vari(prog.PROG_NAME, None, 0)
+    table.append(p)
+    level += 1
     prog.DEC_LIST, prog.SMT_LIST = parse_dec_body(t_stream)
-
+    table.append(0)
     return prog
 
 
@@ -237,6 +277,29 @@ if __name__ == '__main__':
     # source_text = """
     #     q(num);
     # """
+    # source_text = """
+    # procedure q(integer num);
+    # var integer i, j, k;
+    # var integer t;
+    # begin
+    #     i := 1;
+    #     while i < num do
+    #         j := num - i + 1;
+    #         k := 1;
+    #         while k < j do
+    #             if a[k + 1] < a[k]
+    #             then
+    #                 t := a[k];
+    #                 a[k] := a[k + 1];
+    #                 a[k + 1] := t;
+    #             else  temp := 0;
+    #             fi;
+    #         k := k + 1;
+    #         endwh;
+    #     i := i + 1;
+    #     endwh;
+    # end
+    # """
     set_text(source_text)
     parsed_text = source_text + '.'
     context = CharSequence(parsed_text)
@@ -246,6 +309,16 @@ if __name__ == '__main__':
     # draw_ast_tree(tok)
     # smt.parse_arg_list()
     node = __llparse(t_stream)
+    # node = parse_procedure_dec(t_stream)
+
+    # for v in table:
+    #     if type(v) is str:
+    #         print('str: ' + v)
+    #     elif type(v) is int:
+    #         print(v)
+    #     else:
+    #         print(v.text)
+    # print(f"index : {table_walk('t')}")
     # node = match_pri(t_stream)
     # node = parse_statement(t_stream)
     # node3 = parse_statement(t_stream)

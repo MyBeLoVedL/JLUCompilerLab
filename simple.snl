@@ -1,10 +1,8 @@
 program p
     type t = integer,c = char;
-    var integer i, j, num;
+    var integer i, j,k,num;
     var array[1..20] of integer a;
     procedure q(integer num);
-    var integer i, j, k;
-    var integer t;
     begin
         i := 1;
         while i < num do
@@ -23,6 +21,15 @@ program p
         i := i + 1;
         endwh;
     end
+
+    procedure sub(integer num;integer b);
+    var integer res;
+    begin 
+        res = a + b;
+        return res;
+    end
+
+
     begin
         read(num);
         i := 1;
