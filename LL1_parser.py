@@ -44,7 +44,7 @@ def getNextToken():
 
 def getSym():
     global ultiSym, unultiSym
-    ultiSym = open('utiSym.txt').read().split()
+    ultiSym = open('ultiSym.txt').read().split()
     ultiSym = [sym[:-1] if sym[len(sym)-1] == ',' else sym for sym in ultiSym]
 
     unultiSym = open('unultiSym.txt').read().split()
@@ -179,7 +179,7 @@ def printTree(nodeid,deep):
         printTree(child,deep+1)
 
 
-tokens = scanner.getToken(r'test/t2.txt')
+tokens = scanner.getToken(r'test/t3.txt')
 print('Parser start!')
 parser()
 
