@@ -4,7 +4,7 @@ import enum
 
 
 keywords = set(["program", "var", "integer", "char", "procedure", "begin", "end", "id", "array",
-                "intc", "if", 'fi', "then", "else", "fi", "while", "do", "endwh", "return", "array", "read", "write", "type", "of", "record"])
+                "intc", "if", 'fi', "then", "else", "fi", "while", "do", "endwh", "return", "array", "read", "write", "type", "of", "record", "bool", "float"])
 
 to_be_parsed_text = 'hem'
 scope = []
@@ -148,6 +148,7 @@ class ASTnode:
         self.type = type
         self.text = text
         self.child = []
+        self.kind = None
 
     def addChild(self, child):
         self.child.append(child)
@@ -178,6 +179,13 @@ class ASTtype(enum.Enum):
     TYPE_DEC = 18
     PROGRAM = 19
     FIELD_VAR = 20
+
+
+class Value(enum.Enum):
+    INTEGER = 0
+    BOOLEAN = 1
+    FUNCTION = 2
+    CHAR = 3
 
 
 class Symbol():

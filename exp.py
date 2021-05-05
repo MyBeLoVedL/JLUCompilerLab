@@ -1,5 +1,26 @@
+from typing import Text
 from header import *
 from header import ASTtype
+
+
+def tok2val(tok: Token):
+    if type(tok) is not Token:
+        return tok
+    if (tok.type == TokenType.NUM):
+        return Value.INTEGER
+    elif (tok.type == TokenType.ID):
+        t = table[table_walk(tok.text)]
+        if (t.type.type == TokenType.KEY_WORD and t.type.text == 'integer'):
+            return Value.INTEGER
+        elif (t.type.type == TokenType.KEY_WORD and t.type.text == 'char'):
+            return Value.CHAR
+
+
+def getval(node) -> Value:
+    if type(node) is Token:
+        return tok2val(node)
+    elif type(node) is ASTnode:
+        return node.value
 
 
 def expect(tokens, target_token_type, error_msg):
@@ -62,15 +83,24 @@ def token_list_check(tokens: TokenStream, target_list):
                        f'expect {str(target_list[i])} here~! ')
 
 
-def match_id_more(tokens: TokenStream):
+def match_id_more(tokens: TokenStream, id_name):
     tmp = None
     if tokens == TokenType.DOT:
+        entry = table[table_walk(id_name)]
+        if entry.type.type != ASTtype.RECORD:
+            show_error(tokens.peek().row_number,
+                       'can only extract field from record')
         tokens.read()
         token_list_check(tokens, [TokenType.ID])
         tmp = ASTnode(ASTtype.FIELD_VAR)
         tmp.FIELD = tokens.read().text
 
     if tokens == TokenType.LEFT_SQUARE_BRACKET:
+        entry = table[table_walk(id_name)]
+        if entry.type.type != ASTtype.ARRAY:
+            print(entry.type)
+            show_error(tokens.peek().row_number,
+                       'can only apply index to array type')
         if tmp is None:
             tmp = ASTnode(ASTtype.FIELD_VAR)
         tokens.read()
@@ -102,7 +132,7 @@ def match_pri(tokens: TokenStream):
             expect(tokens, TokenType.RIGHT_PAREN, 'expect right parenthesis ~')
             is_func = True
         else:
-            res = match_id_more(tokens)
+            res = match_id_more(tokens, tmp.text)
             if res is not None:
                 res.text = tmp.text
                 tmp = res
@@ -121,7 +151,7 @@ def match_pri(tokens: TokenStream):
 
 def match_mul(tokens: TokenStream):
     init_pos = tokens.pos
-
+    line = tokens.peek().row_number
     left = match_pri(tokens)
 
     while tokens == TokenType.STAR or tokens == TokenType.DIV:
@@ -133,14 +163,22 @@ def match_mul(tokens: TokenStream):
 
         tokens.read()
         right = match_pri(tokens)
+
         if right is None:
-            show_error(tokens.tokenStream[tokens.pos].row_number,
+            show_error(line,
                        'Expect expression after mul operator')
+        if getval(left) != getval(right):
+            show_error(tokens.peek().row_number+1,
+                       'mismatched value type between left and right operand~')
 
         tmp.addChild(left)
         tmp.addChild(right)
+        if getval(right) == Value.INTEGER:
+            tmp.value = Value.INTEGER
+        else:
+            show_error(tokens.peek().row_number+1,
+                       'only support integer operand now~')
         left = tmp
-
     return left
 
 
@@ -162,6 +200,16 @@ def match_add(tokens: TokenStream):
             show_error(tokens.tokenStream[tokens.pos - 1].row_number,
                        'Expect expression after plus operator')
         tmp = ASTnode(ASTtype.ADD_EXP)
+
+        if getval(left) != getval(right):
+            show_error(tokens.peek().row_number+1,
+                       'mismatched value type between left and right operand~')
+
+        if getval(right) == Value.INTEGER:
+            tmp.value = Value.INTEGER
+        else:
+            show_error(tokens.peek().row_number+1,
+                       'only support integer operand now~')
         tmp.addChild(left)
         tmp.addChild(right)
         left = tmp
@@ -192,6 +240,17 @@ def match_rel_low_priority(tokens: TokenStream):
         if right is None:
             show_error(tokens.tokenStream[tokens.pos].row_number,
                        'Expect expression after relational  operator')
+
+        if getval(left) != getval(right):
+            show_error(tokens.peek().row_number+1,
+                       'mismatched value type between left and right operand~')
+
+        if getval(right) == Value.INTEGER:
+            tmp.value = Value.BOOLEAN
+        else:
+            show_error(tokens.peek().row_number+1,
+                       'only support integer operand now~')
+
         tmp.addChild(left)
         tmp.addChild(right)
         left = tmp
@@ -216,6 +275,16 @@ def match_rel(tokens: TokenStream):
         if right is None:
             show_error(tokens.tokenStream[tokens.pos].row_number,
                        'Expect expression after relational  operator')
+
+        if getval(left) != getval(right):
+            show_error(tokens.peek().row_number+1,
+                       'mismatched value type between left and right operand~')
+
+        if getval(right) in (Value.INTEGER, Value.BOOLEAN):
+            tmp.value = Value.BOOLEAN
+        else:
+            show_error(tokens.peek().row_number+1,
+                       'only support integer operand now~')
         tmp.addChild(left)
         tmp.addChild(right)
         left = tmp

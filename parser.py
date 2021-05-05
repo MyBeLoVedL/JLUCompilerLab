@@ -274,32 +274,17 @@ if __name__ == '__main__':
     #         endwh;
     # """
     # source_text = "type t = integer,c = char,stu = record char a;integer age;end"
-    # source_text = """
-    #     q(num);
-    # """
-    # source_text = """
-    # procedure q(integer num);
-    # var integer i, j, k;
-    # var integer t;
-    # begin
-    #     i := 1;
-    #     while i < num do
-    #         j := num - i + 1;
-    #         k := 1;
-    #         while k < j do
-    #             if a[k + 1] < a[k]
-    #             then
-    #                 t := a[k];
-    #                 a[k] := a[k + 1];
-    #                 a[k + 1] := t;
-    #             else  temp := 0;
-    #             fi;
-    #         k := k + 1;
-    #         endwh;
-    #     i := i + 1;
-    #     endwh;
-    # end
-    # """
+    source_text = """
+      procedure sub(integer a;integer b);
+        var integer res;
+        var char ch;
+        begin 
+            res := (a + b) > 20 = 1 > 2;
+            return res;
+        end
+
+    """
+
     set_text(source_text)
     parsed_text = source_text + '.'
     context = CharSequence(parsed_text)
@@ -308,7 +293,8 @@ if __name__ == '__main__':
     # tok = read_type(t_stream)
     # draw_ast_tree(tok)
     # smt.parse_arg_list()
-    node = __llparse(t_stream)
+    # node = __llparse(t_stream)
+    node = parse_procedure_dec(t_stream)
     # node = parse_procedure_dec(t_stream)
 
     # for v in table:

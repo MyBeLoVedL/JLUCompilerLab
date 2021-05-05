@@ -102,24 +102,24 @@ def parse_IO_statement(tokens: TokenStream):
         io_smt = ASTnode(ASTtype.INPUT_SMT)
     tokens.read()
     token_list_check(tokens, [
-                        TokenType.LEFT_PAREN])
+        TokenType.LEFT_PAREN])
     tokens.read()
 
     id = tokens.read()
-    more = match_id_more(tokens)
+    more = match_id_more(tokens, id.text)
     if more is not None:
         more.text = id.text
         id = more
 
     if id is None:
-        show_error(tokens.peek().row_number,"expect valid value~")
-
+        show_error(tokens.peek().row_number, "expect valid value~")
 
     io_smt.addChild(id)
-    token_list_check(tokens,[TokenType.RIGHT_PAREN,TokenType.COLON])
+    token_list_check(tokens, [TokenType.RIGHT_PAREN, TokenType.COLON])
     tokens.read()
     tokens.read()
     return io_smt
+
 
 def parse_loop_statement(tokens: TokenStream):
     assert (tokens.peek().type ==
@@ -129,6 +129,8 @@ def parse_loop_statement(tokens: TokenStream):
     cond = match_rel(tokens)
     if cond is None:
         show_error(tokens.peek().row_number, 'condition can\'t be null')
+    if cond.type != ASTtype.REL_EXP:
+        show_error(tokens.peek().row_number, 'expect an boolean tester')
     if tokens.peek().type != TokenType.KEY_WORD or tokens.peek().text != 'do':
         show_error(tokens.peek().row_number, 'expect do after condition')
 
@@ -147,7 +149,7 @@ def parse_loop_statement(tokens: TokenStream):
             break
         loop_smt.LOOP_SMT.append(child_smt)
 
-    token_list_check(tokens,['endwh',TokenType.COLON])
+    token_list_check(tokens, ['endwh', TokenType.COLON])
     tokens.read()
     tokens.read()
     return loop_smt
@@ -159,11 +161,10 @@ def parse_condition_statement(tokens: TokenStream):
     tokens.read()
     cond_smt = ASTnode(ASTtype.COND_SMT)
     cond = match_rel(tokens)
-    # print(cond);
     if cond is None:
         show_error(tokens.peek().row_number, 'condition can\'t be null')
-    # print(tokens.peek().type)
-    # print(tokens.peek().text)
+    if cond.type != ASTtype.REL_EXP:
+        show_error(tokens.peek().row_number, 'expect an boolean tester')
     if tokens.peek().type != TokenType.KEY_WORD or tokens.peek().text != 'then':
         show_error(tokens.peek().row_number, 'expect then after condition')
 
@@ -193,7 +194,7 @@ def parse_condition_statement(tokens: TokenStream):
                 break
             cond_smt.ELSE_SMT.append(child_smt)
 
-    token_list_check(tokens,['fi',TokenType.COLON])
+    token_list_check(tokens, ['fi', TokenType.COLON])
     tokens.read()
     tokens.read()
     return cond_smt
