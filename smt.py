@@ -55,6 +55,10 @@ def parse_assign_statement(tokens: TokenStream):
         tokens.pos = init_pos
         return None
 
+    t = table[table_walk(asg_smt.VARI.text)]
+    if type(t) != Sym_vari:
+        show_error(
+            tokens.tokenStream[tokens.pos].row_number, 'only variable can be left value')
     expect(tokens, TokenType.ASSIGN, 'expect assign operator ~')
 
     val = match_rel(tokens)

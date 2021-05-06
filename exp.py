@@ -156,6 +156,11 @@ def match_pri(tokens: TokenStream):
             tmp = ASTnode(ASTtype.FUNC_CALL)
             tmp.FUNC_NAME = func_name
             tokens.read()
+            t = table[table_walk(func_name.text)]
+            if type(t) != Sym_proc:
+                show_error(tokens.peek().row_number,
+                           'not a function to call')
+
             tmp.ARG_LIST = parse_arg_list(tokens)
             print(func_name.text)
             para_list = table[table_walk(func_name.text)].para

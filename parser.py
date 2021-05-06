@@ -287,6 +287,7 @@ if __name__ == '__main__':
         begin 
             ids[2] := 30;
             res.value := 20;
+            a(10);
             return res;
         end
       var integer num,a,b;
