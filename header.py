@@ -179,6 +179,7 @@ class ASTtype(enum.Enum):
     TYPE_DEC = 18
     PROGRAM = 19
     FIELD_VAR = 20
+    INDEX_VAR = 21
 
 
 class Value(enum.Enum):
@@ -318,7 +319,12 @@ def draw_ast_tree_helper(root, sep):
             op(str(root.VARI[k]).replace('typeASTtype.', ''), '\n')
 
         elif root.type == ASTtype.ASG_SMT:
-            bp(root.VARI.text, ' = \n')
+            bp(root.VARI.text)
+            if root.VARI.type == ASTtype.FIELD_VAR:
+                bp('.' + root.VARI.FIELD)
+            elif root.VARI.type == ASTtype.INDEX_VAR:
+                bp(f'[{root.VARI.INDEX.text}]')
+            print()
             draw_ast_tree_helper(root.EXP, sep + ' ' * 4)
 
         elif root.type == ASTtype.FUNC_CALL:
@@ -326,8 +332,31 @@ def draw_ast_tree_helper(root, sep):
             for arg in root.ARG_LIST:
                 draw_ast_tree_helper(arg, sep + ' ' * 4)
         elif root.type == ASTtype.INPUT_SMT:
-            gp(sep + 'READ : ')
-            bp(root.child[0].text)
+            gp('READ : ')
+            bp(root.child[0].text, '\n')
+
+        elif root.type == ASTtype.TYPE_DEC:
+            for name, ty in root.DEC.items():
+                bp(sep + name + '==>' + str(ty))
+            print()
+
+        elif root.type == ASTtype.LOOP_SMT:
+            print()
+            gp(sep + ' ' * 4 + 'CONDITION: ', '\n')
+            draw_ast_tree_helper(root.COND_EXP, sep + ' '*8)
+            gp(sep + ' '*4 + 'LOOP STATEMENTS:', '\n')
+            for smt in root.LOOP_SMT:
+                draw_ast_tree_helper(smt, sep + ' ' * 8)
+        elif root.type == ASTtype.COND_SMT:
+            print()
+            gp(sep + ' ' * 4 + 'CONDITION: ', '\n')
+            draw_ast_tree_helper(root.COND_EXP, sep + ' '*8)
+            gp(sep + ' ' * 4 + 'IF: ', '\n')
+            for smt in root.IF_SMT:
+                draw_ast_tree_helper(smt, sep + ' ' * 8)
+            gp(sep + ' ' * 4 + 'ELSE: ', '\n')
+            for smt in root.IF_SMT:
+                draw_ast_tree_helper(smt, sep + ' ' * 8)
 
         else:
             print()

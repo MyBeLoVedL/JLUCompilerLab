@@ -118,7 +118,7 @@ def match_id_more(tokens: TokenStream, id_name):
             show_error(tokens.peek().row_number,
                        'can only apply index to array type')
         if tmp is None:
-            tmp = ASTnode(ASTtype.FIELD_VAR)
+            tmp = ASTnode(ASTtype.INDEX_VAR)
         tokens.read()
         index = match_add(tokens)
 
