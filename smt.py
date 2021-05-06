@@ -46,6 +46,10 @@ def parse_assign_statement(tokens: TokenStream):
     assert(tokens.peek().type == TokenType.ID)
     asg_smt.VARI = tokens.read()
 
+    if table_walk(asg_smt.VARI.text) < 0:
+        show_error(tokens.tokenStream[tokens.pos - 1].row_number,
+                   f'symbol {asg_smt.VARI.text} with no definition')
+
     res = match_id_more(tokens, asg_smt.VARI.text)
     if res is not None:
         res.text = asg_smt.VARI.text

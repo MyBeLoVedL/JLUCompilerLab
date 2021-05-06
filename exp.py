@@ -126,10 +126,10 @@ def match_id_more(tokens: TokenStream, id_name):
             show_error(tokens.peek().row_number + 1,
                        "expect a valid index here")
         try:
-            i = int(index)
+            i = int(index.text)
             if not (i >= int(entry.type.LOWER_BOUND.text) and i <= int(entry.type.UPPER_BOUND.text)):
                 show_error(tokens.peek().row_number + 1,
-                           'index between be in lower bound and upper bound')
+                           'index must be in lower bound and upper bound')
         except TypeError:
             pass
 
