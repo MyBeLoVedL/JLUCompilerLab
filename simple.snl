@@ -15,7 +15,7 @@ program p
                     tmp := a[k];
                     a[k] := a[k + 1];
                     a[k + 1] := tmp;
-                else  temp := 0;
+                else  tmp := 0;
                 fi;
             k := k + 1;
             endwh;
@@ -25,7 +25,7 @@ program p
 
     procedure sub(integer a;integer b);
     var integer res;
-    begin 
+    begin
         res = a + b;
         return res;
     end
