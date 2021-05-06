@@ -278,32 +278,32 @@ if __name__ == '__main__':
     #         endwh;
     # """
     # source_text = "type t = integer,c = char,stu = record char a;integer age;end"
-    source_text = """
-    program main
-      procedure sub(integer a;integer b);
-        var
-            record
-                 integer value;
-                 char name;
-            end
-                res;
-        var array [1..2] of integer ids;
-        begin
-            ids[1] := 30 + 20 * 13;
-            res.value := 20;
-            return res;
-        end
-      var integer num,a,b;
-      var char cg;
-      var array [1..2] of integer stuff;
-      type integet = integer;
-      var integet p;
-    begin
-        sub(a,(1 + 2 * 3));
-        stuff[c] := 2;
-        return num;
-    end.
-    """
+    # source_text = """
+    # program main
+    #   procedure sub(integer a;integer b);
+    #     var
+    #         record
+    #              integer value;
+    #              char name;
+    #         end
+    #             res;
+    #     var array [1..2] of integer ids;
+    #     begin
+    #         ids[1] := 30 + 20 * 13;
+    #         res.value := 20;
+    #         return res;
+    #     end
+    #   var integer num,a,b;
+    #   var char cg;
+    #   var array [1..2] of integer stuff;
+    #   type integet = integer;
+    #   var integet p;
+    # begin
+    #     sub(a,(1 + 2 * 3));
+    #     stuff[2] := 2;
+    #     return num;
+    # end.
+    # """
 
     set_text(source_text)
     parsed_text = source_text + '.'

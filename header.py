@@ -325,14 +325,9 @@ def draw_ast_tree_helper(root, sep):
             bp(root.FUNC_NAME.text, '\n')
             for arg in root.ARG_LIST:
                 draw_ast_tree_helper(arg, sep + ' ' * 4)
-            # elif root.type == ASTtype.ASG_SMT:
-            #     # print(sep + str(root.type) + ':')
-            #     print(sep + '   ' + root.VARI.text, end='')
-            #     if root.STRUCT is not None:
-            #         print('.' + root.STRUCT.text, end='')
-            #     if root.ARR_INDEX is not None:
-            #         print(f'[{str(root.ARR_INDEX.type)}]', end='')
-            #     print(' := ' + str(root.EXP.type))
+        elif root.type == ASTtype.INPUT_SMT:
+            gp(sep + 'READ : ')
+            bp(root.child[0].text)
 
         else:
             print()

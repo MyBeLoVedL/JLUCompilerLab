@@ -130,7 +130,7 @@ def match_id_more(tokens: TokenStream, id_name):
             if not (i >= int(entry.type.LOWER_BOUND.text) and i <= int(entry.type.UPPER_BOUND.text)):
                 show_error(tokens.peek().row_number + 1,
                            'index must be in lower bound and upper bound')
-        except TypeError:
+        except:
             pass
 
         token_list_check(tokens, [TokenType.RIGHT_SQUARE_BRACKET])
