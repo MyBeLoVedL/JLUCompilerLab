@@ -194,7 +194,7 @@ def parse_procedure_dec(tokens: TokenStream):
     tokens.read()
     tokens.read()
 
-    proc_blk.DEC_list, proc_blk.SMT_LIST = parse_dec_body(tokens)
+    proc_blk.DEC_LIST, proc_blk.SMT_LIST = parse_dec_body(tokens)
     table.append(scope[-1]-1)
     del scope[-1]
     level -= 1
@@ -274,30 +274,29 @@ if __name__ == '__main__':
     #         endwh;
     # """
     # source_text = "type t = integer,c = char,stu = record char a;integer age;end"
-    source_text = """
-    program main
-      procedure sub(integer a;integer b);
-        var 
-            record 
-                 integer value;
-                 char name;
-            end
-                res;
-        var array [1..2] of integer ids;
-        begin 
-            ids[2] := 30;
-            res.value := 20;
-            a(10);
-            return res;
-        end
-      var integer num,a,b;
-      var char cg;
+    # source_text = """
+    # program main
+    #   procedure sub(integer a;integer b);
+    #     var
+    #         record
+    #              integer value;
+    #              char name;
+    #         end
+    #             res;
+    #     var array [1..2] of integer ids;
+    #     begin
+    #         ids[2] := 30 + 20 * 13;
+    #         res.value := 20;
+    #         return res;
+    #     end
+    #   var integer num,a,b;
+    #   var char cg;
 
-    begin
-        sub(a,(1 + 2 * 3));
-        return num;
-    end.
-    """
+    # begin
+    #     sub(a,(1 + 2 * 3));
+    #     return num;
+    # end.
+    # """
 
     set_text(source_text)
     parsed_text = source_text + '.'

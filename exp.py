@@ -98,7 +98,6 @@ def match_id_more(tokens: TokenStream, id_name):
         if entry.type.type != ASTtype.RECORD:
             show_error(tokens.peek().row_number+1,
                        'can only extract field from record')
-        pp.pprint(entry.type.VARIABLE)
 
         tokens.read()
         token_list_check(tokens, [TokenType.ID])
@@ -116,7 +115,6 @@ def match_id_more(tokens: TokenStream, id_name):
     if tokens == TokenType.LEFT_SQUARE_BRACKET:
         entry = table[table_walk(id_name)]
         if entry.type.type != ASTtype.ARRAY:
-            print(entry.type)
             show_error(tokens.peek().row_number,
                        'can only apply index to array type')
         if tmp is None:
@@ -127,10 +125,13 @@ def match_id_more(tokens: TokenStream, id_name):
         if index is None:
             show_error(tokens.peek().row_number + 1,
                        "expect a valid index here")
-        i = int(index.text)
-        if not (i >= int(entry.type.LOWER_BOUND.text) and i <= int(entry.type.UPPER_BOUND.text)):
-            show_error(tokens.peek().row_number + 1,
-                       'index between be in lower bound and upper bound')
+        try:
+            i = int(index)
+            if not (i >= int(entry.type.LOWER_BOUND.text) and i <= int(entry.type.UPPER_BOUND.text)):
+                show_error(tokens.peek().row_number + 1,
+                           'index between be in lower bound and upper bound')
+        except TypeError:
+            pass
 
         token_list_check(tokens, [TokenType.RIGHT_SQUARE_BRACKET])
         tokens.read()
@@ -162,7 +163,6 @@ def match_pri(tokens: TokenStream):
                            'not a function to call')
 
             tmp.ARG_LIST = parse_arg_list(tokens)
-            print(func_name.text)
             para_list = table[table_walk(func_name.text)].para
             if len(para_list) != len(tmp.ARG_LIST):
                 show_error(tokens.peek().row_number,

@@ -267,6 +267,18 @@ def show_tokens(t_stream: TokenStream):
         )
 
 
+def bp(string, end=''):
+    print(bcolors.OKBLUE + string + bcolors.ENDC, end=end)
+
+
+def gp(string, end=''):
+    print(bcolors.OKGREEN + string + bcolors.ENDC, end=end)
+
+
+def op(string, end=''):
+    print(bcolors.OKCYAN + string + bcolors.ENDC, end=end)
+
+
 def draw_ast_tree(root):
     draw_ast_tree_helper(root, ' ')
 
@@ -275,23 +287,56 @@ def draw_ast_tree_helper(root, sep):
     if root is None:
         return
     if type(root) == ASTnode:
-        print(sep + str(root.type) + ':')
-        if root.type == ASTtype.FUNC_CALL:
-            print(sep + f'( function name: {root.FUNC_NAME.text}',
-                  end=bcolors.WARNING + ' args: ' + bcolors.ENDC)
-            for arg in root.ARG_LIST:
-                print(str(arg.type), end=' ')
-        elif root.type == ASTtype.ASG_SMT:
-            # print(sep + str(root.type) + ':')
-            print(sep + '   ' + root.VARI.text, end='')
-            if root.STRUCT is not None:
-                print('.' + root.STRUCT.text, end='')
-            if root.ARR_INDEX is not None:
-                print(f'[{str(root.ARR_INDEX.type)}]', end='')
-            print(' := ' + str(root.EXP.type))
+        gp(sep + str(root.type).replace('ASTtype.', '') +
+           '  ', end='')
+        if root.type == ASTtype.PROGRAM:
+            bp(root.PROG_NAME, '\n')
+            gp(sep + ' '*4 + 'DECLARATION:', '\n')
+            for smt in root.DEC_LIST:
+                draw_ast_tree_helper(smt, sep + ' ' * 8)
+            gp(sep + ' '*4 + 'STATEMENT:', '\n')
+            for smt in root.SMT_LIST:
+                draw_ast_tree_helper(smt, sep + ' ' * 8)
+        elif root.type == ASTtype.PROCEDURE:
+            bp(root.PROC_NAME, '  ')
+            for para in root.PARA_LIST:
+                op(para[0], ':')
+                op(str(para[1]), ' ')
+            print()
 
-        for c in root.child:
-            draw_ast_tree_helper(c, sep + ' '*4)
+            gp(sep + ' '*4 + 'DECLARATION:', '\n')
+            for smt in root.DEC_LIST:
+                draw_ast_tree_helper(smt, sep + ' ' * 8)
+            gp(sep + ' '*4 + 'STATEMENT:', '\n')
+            for smt in root.SMT_LIST:
+                draw_ast_tree_helper(smt, sep + ' ' * 8)
+        elif root.type == ASTtype.VARI_DEC:
+            k = ' '
+            for id in root.VARI.keys():
+                bp(id[0], ' ')
+                k = id
+            op(str(root.VARI[k]).replace('typeASTtype.', ''), '\n')
+
+        elif root.type == ASTtype.ASG_SMT:
+            bp(root.VARI.text, ' = \n')
+            draw_ast_tree_helper(root.EXP, sep + ' ' * 4)
+
+        elif root.type == ASTtype.FUNC_CALL:
+            bp(root.FUNC_NAME.text, '\n')
+            for arg in root.ARG_LIST:
+                draw_ast_tree_helper(arg, sep + ' ' * 4)
+            # elif root.type == ASTtype.ASG_SMT:
+            #     # print(sep + str(root.type) + ':')
+            #     print(sep + '   ' + root.VARI.text, end='')
+            #     if root.STRUCT is not None:
+            #         print('.' + root.STRUCT.text, end='')
+            #     if root.ARR_INDEX is not None:
+            #         print(f'[{str(root.ARR_INDEX.type)}]', end='')
+            #     print(' := ' + str(root.EXP.type))
+
+        else:
+            print()
+            for c in root.child:
+                draw_ast_tree_helper(c, sep + ' '*4)
     else:
-        print(sep + bcolors.WARNING + str(root.type).ljust(5) +
-              bcolors.OKGREEN + root.text.rjust(5))
+        bp(sep + root.text + ':' + str(root.type).replace('TokenType.', ''), '\n')
