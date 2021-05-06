@@ -125,7 +125,7 @@ def read_record_type(tokens: TokenStream):
         token_list_check(tokens, [TokenType.COLON])
         tokens.read()
         for var in varis:
-            ty.VARIABLE[(var.text, var.row_number)] = kind
+            ty.VARIABLE[var.text] = kind
 
     token_list_check(tokens, ['end'])
     tokens.read()
@@ -275,14 +275,27 @@ if __name__ == '__main__':
     # """
     # source_text = "type t = integer,c = char,stu = record char a;integer age;end"
     source_text = """
+    program main
       procedure sub(integer a;integer b);
-        var integer res;
-        var char ch;
+        var 
+            record 
+                 integer value;
+                 char name;
+            end
+                res;
+        var array [1..2] of integer ids;
         begin 
-            res := (a + b) > 20 = 1 > 2;
+            ids[2] := 30;
+            res.value := 20;
             return res;
         end
+      var integer num,a,b;
+      var char cg;
 
+    begin
+        sub(a,(1 + 2 * 3));
+        return num;
+    end.
     """
 
     set_text(source_text)
@@ -293,8 +306,8 @@ if __name__ == '__main__':
     # tok = read_type(t_stream)
     # draw_ast_tree(tok)
     # smt.parse_arg_list()
-    # node = __llparse(t_stream)
-    node = parse_procedure_dec(t_stream)
+    node = __llparse(t_stream)
+    # node = parse_procedure_dec(t_stream)
     # node = parse_procedure_dec(t_stream)
 
     # for v in table:

@@ -148,7 +148,7 @@ class ASTnode:
         self.type = type
         self.text = text
         self.child = []
-        self.kind = None
+        self.value = None
 
     def addChild(self, child):
         self.child.append(child)

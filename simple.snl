@@ -10,6 +10,7 @@ program p
         while i < num do
             j := num - i + 1;
             k := 1;
+            i.j := 2;
             while k < j do
                 if a[k + 1] < a[k]
                 then

@@ -46,23 +46,10 @@ def parse_assign_statement(tokens: TokenStream):
     assert(tokens.peek().type == TokenType.ID)
     asg_smt.VARI = tokens.read()
 
-    if tokens.peek().type == TokenType.DOT:
-        tokens.read()
-        expect(tokens, TokenType.ID, 'expect identifier at struct position')
-        tokens.unread()
-        asg_smt.STRUCT = tokens.read()
-
-    if tokens.peek().type == TokenType.LEFT_SQUARE_BRACKET:
-        tokens.read()
-        exp = match_rel(tokens)
-        if exp is None:
-            show_error(tokens.tokenStream[tokens.pos].row_number,
-                       'expect expression between square bracket')
-        if tokens.peek().type != TokenType.RIGHT_SQUARE_BRACKET:
-            show_error(
-                tokens.tokenStream[tokens.pos].row_number, 'mismatched square bracket~')
-        tokens.read()
-        asg_smt.ARR_INDEX = exp
+    res = match_id_more(tokens, asg_smt.VARI.text)
+    if res is not None:
+        res.text = asg_smt.VARI.text
+        asg_smt.VARI = res
 
     if tokens.peek().type != TokenType.ASSIGN:
         tokens.pos = init_pos
@@ -71,10 +58,13 @@ def parse_assign_statement(tokens: TokenStream):
     expect(tokens, TokenType.ASSIGN, 'expect assign operator ~')
 
     val = match_rel(tokens)
-
     if val is None:
         show_error(
             tokens.tokenStream[tokens.pos].row_number, 'expect expression after assign')
+
+    if getval(val) != getval(asg_smt.VARI):
+        show_error(tokens.peek().row_number + 1,
+                   'incompatible value for assignment')
     asg_smt.EXP = val
 
     expect(tokens, TokenType.COLON, 'expect colon ~')

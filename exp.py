@@ -1,6 +1,7 @@
 from typing import Text
 from header import *
 from header import ASTtype
+import pprint as pp
 
 
 def tok2val(tok: Token):
@@ -14,6 +15,13 @@ def tok2val(tok: Token):
             return Value.INTEGER
         elif (t.type.type == TokenType.KEY_WORD and t.type.text == 'char'):
             return Value.CHAR
+    elif tok == 'integer':
+        return Value.INTEGER
+    elif tok == 'char':
+        return Value.CHAR
+    else:
+        print("unknown value ")
+        return None
 
 
 def getval(node) -> Value:
@@ -88,12 +96,22 @@ def match_id_more(tokens: TokenStream, id_name):
     if tokens == TokenType.DOT:
         entry = table[table_walk(id_name)]
         if entry.type.type != ASTtype.RECORD:
-            show_error(tokens.peek().row_number,
+            show_error(tokens.peek().row_number+1,
                        'can only extract field from record')
+        pp.pprint(entry.type.VARIABLE)
+
         tokens.read()
         token_list_check(tokens, [TokenType.ID])
         tmp = ASTnode(ASTtype.FIELD_VAR)
         tmp.FIELD = tokens.read().text
+        if tmp.FIELD not in entry.type.VARIABLE:
+            show_error(tokens.peek().row_number + 1,
+                       'no such field')
+        v = entry.type.VARIABLE[tmp.FIELD]
+        if v == 'integer':
+            tmp.value = Value.INTEGER
+        elif v == 'char':
+            tmp.value = Value.CHAR
 
     if tokens == TokenType.LEFT_SQUARE_BRACKET:
         entry = table[table_walk(id_name)]
@@ -105,12 +123,22 @@ def match_id_more(tokens: TokenStream, id_name):
             tmp = ASTnode(ASTtype.FIELD_VAR)
         tokens.read()
         index = match_add(tokens)
+
         if index is None:
-            show_error(tokens.peek().row_number,
+            show_error(tokens.peek().row_number + 1,
                        "expect a valid index here")
+        i = int(index.text)
+        if not (i >= int(entry.type.LOWER_BOUND.text) and i <= int(entry.type.UPPER_BOUND.text)):
+            show_error(tokens.peek().row_number + 1,
+                       'index between be in lower bound and upper bound')
+
         token_list_check(tokens, [TokenType.RIGHT_SQUARE_BRACKET])
         tokens.read()
         tmp.INDEX = index
+        if entry.type.BASE_TYPE == 'integer':
+            tmp.value = Value.INTEGER
+        elif entry.type.BASE_TYPE == 'char':
+            tmp.value = Value.CHAR
     return tmp
 
 
@@ -129,6 +157,15 @@ def match_pri(tokens: TokenStream):
             tmp.FUNC_NAME = func_name
             tokens.read()
             tmp.ARG_LIST = parse_arg_list(tokens)
+            print(func_name.text)
+            para_list = table[table_walk(func_name.text)].para
+            if len(para_list) != len(tmp.ARG_LIST):
+                show_error(tokens.peek().row_number,
+                           'mismatched argument list number~')
+            for i, pa in enumerate(tmp.ARG_LIST):
+                if getval(pa) != getval(para_list[i][1]):
+                    show_error(tokens.peek().row_number + 1,
+                               f'mismatched parameter for function call~')
             expect(tokens, TokenType.RIGHT_PAREN, 'expect right parenthesis ~')
             is_func = True
         else:
