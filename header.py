@@ -268,6 +268,14 @@ def show_tokens(t_stream: TokenStream):
         )
 
 
+def show_table():
+    for sym in table:
+        if type(sym) is int:
+            gp(str(sym), '\n')
+        else:
+            bp(sym.text, '\n')
+
+
 def bp(string, end=''):
     print(bcolors.OKBLUE + string + bcolors.ENDC, end=end)
 
